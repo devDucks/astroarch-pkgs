@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-drivers
 pkgver=1.9.4
-pkgrel=2
+pkgrel=4
 commit=f821998ace547c09795c461a68dd66637d0a8b4c
 pkgdesc="Indi 3rd party drivers"
 arch=(x86_64 aarch64)
@@ -31,8 +31,10 @@ build() {
 package() {
   cd build
   make DESTDIR="$pkgdir" install
+  mkdir -p "$pkgdir"/usr/lib/firmware
   mv "$pkgdir"/lib/firmware/* "$pkgdir"/usr/lib/firmware
   mv "$pkgdir"/lib/udev/rules.d/* "$pkgdir"/usr/lib/udev/rules.d
+  rm "$pkgdir"/usr/lib/udev/rules.d/99-fli.rules
   rmdir "$pkgdir/lib/udev/rules.d"
   rmdir "$pkgdir/lib/udev"
   rmdir "$pkgdir/lib/firmware"
