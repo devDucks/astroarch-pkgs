@@ -20,7 +20,7 @@ prepare() {
 build() {
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d -DCMAKE_BUILD_TYPE=Debug ../indi-$pkgver
-  make
+  make -j($nproc)
 }
 
 package() {
