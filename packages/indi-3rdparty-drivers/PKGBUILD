@@ -6,23 +6,23 @@ pkgdesc="Indi 3rd party drivers"
 arch=(x86_64 aarch64)
 url="https://indilib.org"
 license=('LGPLv2')
-depends=('indi-3rdparty-libs')
+depends=('indi-3rdparty-libs' 'limesuite')
 makedepends=(cmake)
 source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('10ed5e6c3a306bd77c8e39d40a942dd166ae623b12bcd6bd52b871b7ba8c908b')
 
 prepare() {
-	mkdir -p build
+  mkdir -p build
 }
 
 build() {
-	cd build
-	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d -DFIRMWARE_INSTALL_DIR=/usr/lib/firmware -DWITH_CAUX=Off ../indi-3rdparty-$pkgver
-	make -j$(nproc)
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d -DFIRMWARE_INSTALL_DIR=/usr/lib/firmware -DWITH_CAUX=Off ../indi-3rdparty-$pkgver
+  make -j$(nproc)
 }
 
 package() {
-	cd build
-	make DESTDIR="$pkgdir" install
-	rmdir "$pkgdir/lib"
+  cd build
+  make DESTDIR="$pkgdir" install
+  rmdir "$pkgdir/lib"
 }
