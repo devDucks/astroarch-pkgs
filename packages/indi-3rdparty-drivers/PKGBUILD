@@ -1,0 +1,31 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=indi-3rdparty-drivers
+pkgver=1.9.4
+pkgrel=1
+pkgdesc="Indi 3rd party drivers"
+arch=(x86_64 aarch64)
+url=""
+license=('LGPL')
+depends=('indi-3rdparty-libs')
+makedepends=(cmake)
+source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('10ed5e6c3a306bd77c8e39d40a942dd166ae623b12bcd6bd52b871b7ba8c908b')
+
+prepare() {
+	mkdir -p build
+}
+
+build() {
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DWITH_CAUX=Off ../indi-3rdparty-$pkgver
+	make -j4
+}
+
+package() {
+	cd build
+	make DESTDIR="$pkgdir" install
+	mv "$pkgdir/lib/firmware" "$pkgdir/usr/lib"
+	mv "$pkgdir/lib/udev" "$pkgdir/usr/lib"
+	rm "$pkgdir/usr/lib/udev/rules.d/99-fli.rules"
+	rmdir "$pkgdir/lib"
+}
