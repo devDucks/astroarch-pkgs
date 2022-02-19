@@ -24,4 +24,8 @@ build() {
 package() {
   cd build
   make DESTDIR="$pkgdir" install
+  mv "$pkgdir"/lib/firmware/* "$pkgdir/usr/lib/firmware"
+  rmdir "$pkgdir/lib/firmware"
+  rmdir "$pkgdir/lib"
+  sed -e 's|/lib/firmware|/usr/lib/firmware|' -i "$pkgdir"/usr/lib/udev/rules.d/*.rules
 }
