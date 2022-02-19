@@ -5,7 +5,7 @@ pkgrel=2
 pkgdesc="Indi core library"
 arch=(x86_64 aarch64)
 url="https://github.com/indilib/indi"
-license=('LGPL2.1')
+license=('LGPLv2')
 depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' \
          'libnova' 'libtiff' 'fftw' 'rtl-sdr' 'libgphoto2' 'curl' 'libtheora')
 makedepends=('cmake' 'boost')
