@@ -1,0 +1,26 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=kstars
+pkgver=3.5.7
+pkgrel=1
+pkgdesc="Kstars planetary software and ekos"
+arch=(x86_64 aarch64)
+url="https://edu.kde.org/kstars/"
+license=('LGPL')
+depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff' 'knotifyconfig' 'kplotting' 'libindi' 'libraw' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' 'stellarsolver' 'xplanet' 'eigen' 'extra-cmake-modules' 'kdoctools')
+makedepends=(cmake)
+source=("https://invent.kde.org/education/kstars/-/archive/stable-$pkgver/$pkgname-stable-v$pkgver.tar.gz")
+
+prepare() {
+	mkdir -p build
+}
+
+build() {
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo  ../kstars-$pkgver
+	make -j4
+}
+
+package() {
+	cd build
+	make DESTDIR="$pkgdir" install
+}
