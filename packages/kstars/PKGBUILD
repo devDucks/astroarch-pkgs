@@ -10,7 +10,8 @@ depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff' 'knotifyconfig' 'kplott
          'libindi' 'libraw' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' \
 	 'stellarsolver' 'xplanet' 'eigen' 'kdoctools')
 makedepends=(cmake extra-cmake-modules)
-source=("https://invent.kde.org/education/kstars/-/archive/stable-$pkgver/$pkgname-stable-v$pkgver.tar.gz")
+source=("https://download.kde.org/stable/$pkgname/$pkgname-$pkgver.tar.xz")
+sha256sums=('aa8f122ee9b8e81334433191eab276c361112b9dcb9bcf8dfa0851e87a100d06')
 
 prepare() {
   mkdir -p build
