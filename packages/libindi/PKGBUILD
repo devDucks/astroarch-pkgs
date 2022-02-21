@@ -12,21 +12,15 @@ makedepends=('cmake' 'boost')
 source=("https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('0d2ec2a472bba04020a24bf34554318e9c891bd14b06c175f6a272ed24b90fe9')
 
-prepare() {
-  mkdir -p build
-}
-
 build() {
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-        -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
-        -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects" \       
-        ../indi-$pkgver
-  make -j$(nproc)
+  cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
+    -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
+    -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects" \
+    indi-$pkgver
+  cmake --build $srcdir/build -j$(nproc)
 }
 
 package() {
-  cd build
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install build
 }
