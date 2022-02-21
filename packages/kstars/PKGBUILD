@@ -1,26 +1,32 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=kstars
 pkgver=3.5.7
-pkgrel=1
+pkgrel=2
 pkgdesc="Kstars planetary software and ekos"
 arch=(x86_64 aarch64)
 url="https://edu.kde.org/kstars/"
-license=('LGPL')
-depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff' 'knotifyconfig' 'kplotting' 'libindi' 'libraw' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' 'stellarsolver' 'xplanet' 'eigen' 'extra-cmake-modules' 'kdoctools')
-makedepends=(cmake)
+license=('APACHE2' 'BSD3' 'GPL' 'LGPL' 'LGPLv2' 'LGPLv3' 'MIT')
+depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff' 'knotifyconfig' 'kplotting' \
+         'libindi' 'libraw' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' \
+	 'stellarsolver' 'xplanet' 'eigen' 'kdoctools')
+makedepends=(cmake extra-cmake-modules)
 source=("https://invent.kde.org/education/kstars/-/archive/stable-$pkgver/$pkgname-stable-v$pkgver.tar.gz")
 
 prepare() {
-	mkdir -p build
+  mkdir -p build
 }
 
 build() {
-	cd build
-	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo  ../kstars-$pkgver
-	make -j4
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_TESTING=OFF \
+        -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+        -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects"  \
+	../kstars-$pkgver
+  make -j$(nproc)
 }
 
 package() {
-	cd build
-	make DESTDIR="$pkgdir" install
+  cd build
+  make DESTDIR="$pkgdir" install
 }
