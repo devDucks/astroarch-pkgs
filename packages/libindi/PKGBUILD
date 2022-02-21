@@ -23,7 +23,7 @@ build() {
         -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
         -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects" \       
         ../indi-$pkgver
-  make -j($nproc)
+  make -j$(nproc)
 }
 
 package() {
