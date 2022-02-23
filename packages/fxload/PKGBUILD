@@ -7,6 +7,7 @@ arch=('aarch64' 'x86_64')
 url='http://libusb.info/'
 license=('LGPL')
 depends=('libusb')
+makedepends=(autoconf automake pkgconf)
 source=("https://github.com/libusb/libusb/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('f9c4b7dad27a6196ca9ec3c6ec7fa446194342de326c71e030eb2c480895e169')
 
@@ -16,7 +17,7 @@ build() {
   cd libusb
   make
   cd ../examples
-  gcc $CFLAGS $(pkg-config --libs --cflags libusb-1.0) -I ../ fxload.c ezusb.c -o fxload
+  gcc $CFLAGS $(pkg-config --libs --cflags libusb-1.0) -I ../ -I ../libusb fxload.c ezusb.c -o fxload
 }
 
 
