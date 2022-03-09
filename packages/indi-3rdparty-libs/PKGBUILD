@@ -1,15 +1,15 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-libs
-pkgver=1.9.4
-pkgrel=4
+pkgver=1.9.5
+pkgrel=1
 pkgdesc="Indi 3rd party libraries"
 arch=(x86_64 aarch64)
 url="https://indilib.org"
 license=('LGPLv2')
-depends=('libindi' 'ffmpeg')
+depends=('libindi' 'ffmpeg' 'libgphoto2')
 makedepends=(cmake)
 source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('10ed5e6c3a306bd77c8e39d40a942dd166ae623b12bcd6bd52b871b7ba8c908b')
+sha256sums=('a4a7db8ff9998ffe0688eab6657e132b82a64b3f7a3b5cc7309b9c900edbd0df')
 
 prepare() {
   mkdir -p build
@@ -29,9 +29,6 @@ build() {
 package() {
   cd build
   make DESTDIR="$pkgdir" install
-  mv "$pkgdir"/lib/firmware/* "$pkgdir/usr/lib/firmware"
-  rmdir "$pkgdir/lib/firmware"
-  rmdir "$pkgdir/lib"
   sed -e 's|/lib/firmware|/usr/lib/firmware|' -i "$pkgdir"/usr/lib/udev/rules.d/*.rules
   sed -e 's|/usr/lib/firmware/qhy|/usr/lib/firmware|' -i "$pkgdir"/usr/lib/udev/rules.d/85-qhyccd.rules
   sed -e 's|-D $env{DEVNAME}|-p $env{BUSNUM},$env{DEVNUM}|' -i "$pkgdir"/usr/lib/udev/rules.d/85-qhyccd.rules
