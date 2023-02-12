@@ -9,7 +9,7 @@ license=('LGPL')
 depends=('libindi' 'libnova' 'curl' 'wxwidgets-gtk3' 'wxwidgets-common' 'libtiff5')
 makedepends=(cmake)
 source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('4a2bda59a280c0e2a8850c0626209ecf7047e508e33a75a9223b6092e9dc32444a2bda59a280c0e2a8850c0626209ecf7047e508e33a75a9223b6092e9dc3244')
+sha256sums=('4a2bda59a280c0e2a8850c0626209ecf7047e508e33a75a9223b6092e9dc3244')
 
 prepare() {
 	mkdir -p build
