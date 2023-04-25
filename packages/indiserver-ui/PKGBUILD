@@ -1,0 +1,22 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=indiserver-ui
+pkgver=0.1.1
+pkgrel=1
+pkgdesc="Small GUI to start/stop INDI server"
+arch=(x86_64 aarch64)
+url=https://github.com/MattBlack85/indiserver-ui
+license=(MIT)
+depends=(gcc-libs)
+makedepends=(rustup)
+source=(https://github.com/MattBlack85/indiserver-ui/archive/refs/tags/v${pkgver}.tar.gz)
+sha256sums=(339c1a3e67e57d89332cb1ac0778225c2b0bd22f69a45501f9a6a83c6a3e547b)
+
+build() {
+    cd ${srcdir}/indiserver-ui-${pkgver}
+    cargo build --release
+}
+
+package() {
+    mkdir -p ${pkgdir}/usr/bin/
+    mv ${srcdir}/indiserver-ui-${pkgver}/target/release/indiserver-ui ${pkgdir}/usr/bin
+}
