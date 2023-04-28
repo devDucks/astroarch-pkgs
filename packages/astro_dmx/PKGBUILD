@@ -1,0 +1,50 @@
+# Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
+pkgname=astro_dmx
+pkgver=2.1.0
+pkgrel=1
+pkgdesc="Video capturing software for astronomy"
+arch=(x86_64 aarch64)
+url="https://www.astrodmx-capture.org.uk"
+license=('LGPLv2')
+depends=()
+makedepends=()
+source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/x86-64/astrodmx-capture_${pkgver}_x86-64-manual.tar.gz")
+[ "$CARCH" = "aarch64" ] && source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/rpi/astrodmx-glibc-2.28_${pkgver}_manual-aarch64.tar.gz")
+sha256sums=('0ef4c62f31e5c59bc6e276aad8b726449221501b9c198e65bc663b9a5c248239')
+[ "$CARCH" = "aarch64" ] && sha256sums=(3d8c2e9564546d515d730831b82741da4db4b721fdcffe4712e85678df9a32c3)
+_app_folder=AstroDMx-${pkgver}-manual
+[ "$CARCH" = "aarch64" ] && _app_folder=R-Linux-aarch64-2.28
+
+
+build() {
+  tar xvfz astro_dmx.tar.gz -C "$srcdir"
+}
+
+package() {
+    mkdir -p "${pkgdir}/usr/share/"
+    cp -r $srcdir/$_app_folder/usr/share/* $pkgdir/usr/share
+
+    mkdir -p "${pkgdir}/opt/AstroDMx-Capture"
+    cp -r $srcdir/$_app_folder/opt/AstroDMx-Capture $pkgdir/opt/
+
+    mkdir -p $pkgdir/etc/xdg/menus/applications-merged/
+    cp ${srcdir}/$_app_folder/etc/xdg/menus/applications-merged/astrodmx.menu ${pkgdir}/etc/xdg/menus/applications-merged/
+
+    # Move now camera rules, but replace them with a lower number so that they won't conflict with the indi ones
+    mkdir -p ${pkgdir}/etc/udev/rules.d
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/60-lumenera-cam-generic-u3v.rules ${pkgdir}/etc/udev/rules.d/59-lumenera-cam-generic-u3v.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/80-theimagingsource-cameras.rules ${pkgdir}/etc/udev/rules.d/79-theimagingsource-cameras.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/85-qhyccd.rules ${pkgdir}/etc/udev/rules.d/84-qhyccd.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-altaircam.rules ${pkgdir}/etc/udev/rules.d/98-altaircam.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-meadecam.rules ${pkgdir}/etc/udev/rules.d/98-meadecam.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-nncam.rules ${pkgdir}/etc/udev/rules.d/98-nncam.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-omegonprocam.rules ${pkgdir}/etc/udev/rules.d/98-omegonprocam.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-player_one_astronomy.rules ${pkgdir}/etc/udev/rules.d/98-player_one_astronomy.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-starshootg.rules ${pkgdir}/etc/udev/rules.d/98-starshootg.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-svbony.rules ${pkgdir}/etc/udev/rules.d/98-svbony.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-toupcam.rules ${pkgdir}/etc/udev/rules.d/98-toupcam.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-uvc.rules ${pkgdir}/etc/udev/rules.d/98-uvc.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/asi.rules ${pkgdir}/etc/udev/rules.d/98-asi.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/atik.rules ${pkgdir}/etc/udev/rules.d/98-atik.rules
+    cp ${srcdir}/$_app_folder/etc/udev/rules.d/efw.rules ${pkgdir}/etc/udev/rules.d/98-efw.rules
+}
