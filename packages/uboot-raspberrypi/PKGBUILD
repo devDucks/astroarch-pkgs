@@ -1,0 +1,71 @@
+# U-Boot: Raspberry Pi
+# Maintainer: Kevin Mihelich <kevin@archlinuxarm.org>
+
+pkgname=uboot-raspberrypi
+pkgver=2023.01
+pkgrel=1
+pkgdesc="U-Boot for Raspberry Pi"
+arch=('armv7h' 'aarch64')
+url='http://www.denx.de/wiki/U-Boot/WebHome'
+license=('GPL')
+backup=('boot/boot.txt' 'boot/boot.scr' 'boot/config.txt')
+makedepends=('bc' 'dtc' 'git')
+conflicts_armv7h=('linux-raspberrypi')
+_commit=78852e166b4cf3ebb31d051e996d54792f0994b0
+source=("ftp://ftp.denx.de/pub/u-boot/u-boot-${pkgver/rc/-rc}.tar.bz2"
+        "https://github.com/raspberrypi/firmware/raw/${_commit}/boot/bcm2710-rpi-3-b.dtb"
+        "https://github.com/raspberrypi/firmware/raw/${_commit}/boot/bcm2710-rpi-3-b-plus.dtb"
+        "https://github.com/raspberrypi/firmware/raw/${_commit}/boot/bcm2710-rpi-cm3.dtb"
+        "https://github.com/raspberrypi/firmware/raw/${_commit}/boot/bcm2711-rpi-4-b.dtb"
+        '0001-rpi-increase-space-for-kernel.patch'
+        'boot.txt.v2'
+        'boot.txt.v3'
+        'mkscr')
+md5sums=('fa1248787e7539b276fa59d2949a9f2f'
+         '19b12db61e0c5e9e1e592abd0ffe5e12'
+         '2b53428e6b0d38ee202bd24b2eb6ede9'
+         'fd22db32e9d7ea1ac6a386f2148968a4'
+         '86774ab6aab7134be17be3ee7eb24d7e'
+         'aeb43f1e01983ceb8675380338ec56e8'
+         '69e883f0b8d1686b32bdf79684623f06'
+         'be8abe44b86d63428d7ac3acc64ee3bf'
+         '021623a04afd29ac3f368977140cfbfd')
+
+prepare() {
+  cd u-boot-${pkgver/rc/-rc}
+
+  patch -p1 -i ../0001-rpi-increase-space-for-kernel.patch
+}
+
+build() {
+  cd u-boot-${pkgver/rc/-rc}
+
+  unset CFLAGS
+  unset CXXFLAGS
+  unset CPPFLAGS
+
+  make distclean
+  [[ $CARCH == "armv7h" ]] && make rpi_2_config
+  [[ $CARCH == "aarch64" ]] && make rpi_arm64_config
+  echo 'CONFIG_IDENT_STRING=" Arch Linux ARM"' >> .config
+  make EXTRAVERSION=-${pkgrel}
+}
+
+package() {
+  cd u-boot-${pkgver/rc/-rc}
+
+  mkdir -p "${pkgdir}"/boot
+
+  if [[ $CARCH == "armv7h" ]]; then
+    cp u-boot.bin ${pkgdir}/boot/kernel7.img
+    cp ../boot.txt.v2 ../boot.txt
+  elif [[ $CARCH == "aarch64" ]]; then
+    cp u-boot.bin ${pkgdir}/boot/kernel8.img
+    cp ../*.dtb ${pkgdir}/boot
+    cp ../boot.txt.v3 ../boot.txt
+    echo "enable_uart=1" > ${pkgdir}/boot/config.txt
+  fi
+
+  tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ../boot.txt "${pkgdir}"/boot/boot.scr
+  cp ../{boot.txt,mkscr} "${pkgdir}"/boot
+}
