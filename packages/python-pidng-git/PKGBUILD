@@ -1,0 +1,27 @@
+# Maintainer: trougnouf (Benoit Brummer) <trougnouf@gmail.com>
+_NAME='PiDNG'
+pkgname=python-pidng
+pkgver=4.0.9
+pkgrel=1
+_commit=5b9dd828e20537421a1aec877e8ba8e9c7f13e7c
+pkgdesc="Create Adobe DNG RAW files using Python."
+url="https://github.com/schoolpost/pidng"
+license=('MIT')
+arch=('x86_64')
+depends=('python-exifread' 'python-numpy')
+makedepends=('python-setuptools')
+source=("git+${url}.git")
+sha256sums=('SKIP')
+
+build() {
+    cd ${srcdir}/pidng
+    git checkout $_commit
+    python setup.py build
+}
+
+package() {
+    cd ${srcdir}/pidng
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    python setup.py install --root="$pkgdir/" --optimize=1 --skip-build
+}
+
