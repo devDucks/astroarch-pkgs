@@ -7,7 +7,7 @@ arch=(x86_64 aarch64)
 url="https://github.com/raspberrypi/libcamera"
 license=('LGPLv2' 'MIT' 'GPLv3' 'BSD2' 'BSD3')
 depends=('python' 'python-prctl' 'python-piexif')
-makedepends=('pybind11' 'meson')
+makedepends=('pybind11' 'meson' 'python-sphinx' 'python-jinja')
 source=("libcamera::git+https://git.libcamera.org/libcamera/libcamera.git")
 sha256sums=("SKIP")
 # paru python-pidng-git kmsxx-git
