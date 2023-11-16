@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=collimation-circles
 _customname=CollimationCircles
-pkgver=2.1.0
+pkgver=2.2.2
 pkgrel=1
 pkgdesc="Main purpose of this program is to help you with aligning optical elements of your telescope such as secondary mirror, primary mirror, focuser, etc."
 arch=(x86_64 aarch64)
@@ -10,15 +10,14 @@ license=('GPL')
 makedepends=('dotnet-sdk')
 options=(!strip)
 source=("https://github.com/sajmons/CollimationCircles/archive/refs/tags/version-$pkgver.tar.gz")
-sha256sums=(a1997af29711197e75892862bd788a1b134b26fcd3f8ba52352875d30b39296c)
+sha256sums=(0554ef0533bd981a79834995975003c36fcb7204b1130996b3930a2d787cae39)
 _flag=linux-x64
 [ "$CARCH" = "aarch64" ] && _flag=linux-arm64
 
 
 build() {
     cd ${srcdir}/${_customname}-version-${pkgver}
-    dotnet publish -c Release -f net7.0 -r $_flag -o build --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:DebugType=None /p:DebugSymbols=false
-
+    dotnet publish -c Release -f net7.0 -r $_flag -o build --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true
 }
 
 package() {
