@@ -1,0 +1,28 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=astrolink4pi
+pkgver=3.0.0
+pkgrel=1
+pkgdesc="Indi driver for astrojolo's astrolink"
+arch=(aarch64)
+url="https://github.com/astrojolo/astrolink4pi"
+license=('GPLv3')
+depends=('pigpio' 'libgpiod' 'libindi')
+makedepends=(cmake)
+source=("https://github.com/astrojolo/astrolink4pi/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('4ec6eca183411aad1363f54230fc9e7b766c1e77e22a48afeadb7e3251cd3156')
+
+prepare() {
+  mkdir -p build
+}
+
+build() {
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        ../astrolink4pi-$pkgver
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}
