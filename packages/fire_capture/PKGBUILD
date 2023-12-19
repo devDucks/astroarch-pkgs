@@ -1,0 +1,29 @@
+# Maintainer: Mattia Procopio <matto.astro@gmail.com>
+# Original AUR PKGBUILD mantainer Daniel Reibl <janos.daniel.reibl@pm.me>
+# This build contains some changes that allow FireCapture to work on aarch64 and start with no path issues
+pkgname=firecapture
+pkgver=2.7.14
+pkgrel=1
+pkgdesc="The leading planetary capture tool"
+arch=(aarch64)
+url="http://www.firecapture.de"
+license=('custom:firecapture')
+depends=('libusb')
+source=(fire_capture.deb::https://www.thefamilee.co.uk/public/Astro/firecapture_${pkgver}_aarch64.deb)
+sha256sums=(3bbcabe388c238094e81580a7d93108248b01687c76a4dfdb98b7518ed3fef51)
+_filename=fire_capture.deb
+
+prepare() {
+    ar p ${_filename} data.tar.xz > data.tar.xz
+}
+
+package() {
+    echo "  -> Extracting the data.tar.xz..."
+    bsdtar -xf data.tar.xz -C "$pkgdir/"
+    #mkdir -p "$pkgdir/usr/lib"
+
+    # License
+    install -Dm644 "$pkgdir/opt/FireCapture_v2.7/license.txt" "$pkgdir/usr/share/licenses/$pkgname/license.txt"
+    mv "$pkgdir/lib/" "$pkgdir/usr/lib"
+    rm -rf "$pkgdir/lib"
+}
