@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=Collimation Circles
+Type=Application
+Exec=/usr/sbin/CollimationCircles
+Icon=collimation_circles.svg
+Categories=Astronomy;
+Comment=Utility to help you collimating your telescope
