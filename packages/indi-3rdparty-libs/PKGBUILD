@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-libs
-pkgver=2.0.5
+pkgver=2.0.6
 pkgrel=1
 pkgdesc="Indi 3rd party libraries"
 arch=(x86_64 aarch64)
@@ -9,7 +9,7 @@ license=('LGPLv2')
 depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'pipewire-media-session')
 makedepends=(cmake)
 source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('17f5a0536f2ee6bfbcbdcdde9a44c2e59c2156637004193f650bdd2dda123291')
+sha256sums=(99822ed417fd4cb9646065fe6158244495f082d714c6f1bbbbdb48ebd8e303b2)
 
 prepare() {
   mkdir -p build
