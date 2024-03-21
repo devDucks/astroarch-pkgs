@@ -1,0 +1,33 @@
+# Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
+pkgname=libindi-git
+pkgver=r9709.dcaa4ce
+pkgrel=1
+pkgdesc="Indi core library"
+arch=(x86_64 aarch64)
+url="https://github.com/indilib/indi"
+license=('LGPLv2')
+conflicts=(libindi)
+depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' 'libuv' \
+         'libnova' 'libtiff' 'fftw' 'rtl-sdr' 'libgphoto2' 'curl' 'libtheora' \
+	 'libev')
+makedepends=('cmake' 'boost')
+source=("libindi::git+https://github.com/indilib/indi.git")
+sha256sums=(SKIP)
+
+pkgver() {
+  cd libindi
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"  
+}
+
+build() {
+  cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
+	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
+    	-DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+	-DCMAKE_CXX_FLAGS="$CXX_FLAGS -ffat-lto-objects -Wp,-U_GLIBCXX_ASSERTIONS" \
+    	libindi
+  cmake --build $srcdir/build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}
