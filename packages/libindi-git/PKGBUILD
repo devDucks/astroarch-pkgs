@@ -1,12 +1,13 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=libindi-git
 pkgver=r9709.dcaa4ce
-pkgrel=1
+pkgrel=2
 pkgdesc="Indi core library"
 arch=(x86_64 aarch64)
 url="https://github.com/indilib/indi"
 license=('LGPLv2')
 conflicts=(libindi)
+provides=(libindi)
 depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' 'libuv' \
          'libnova' 'libtiff' 'fftw' 'rtl-sdr' 'libgphoto2' 'curl' 'libtheora' \
 	 'libev')
