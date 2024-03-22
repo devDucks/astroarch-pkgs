@@ -1,0 +1,13 @@
+[Unit]
+Description=Daemon to talk to the GPIO
+Requires=display-manager.service
+After=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/rgpiod
+Restart=on-failure
+RestartSec=500ms
+
+[Install]
+WantedBy=multi-user.target
