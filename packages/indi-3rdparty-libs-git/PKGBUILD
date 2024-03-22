@@ -1,15 +1,21 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
-pkgname=indi-3rdparty-libs
-pkgver=2.0.6
-pkgrel=2
+pkgname=indi-3rdparty-libs-git
+pkgver=r97.2e1ad45
+pkgrel=1
 pkgdesc="Indi 3rd party libraries"
+conflicts=(indi-3rdparty-libs)
 arch=(x86_64 aarch64)
 url="https://indilib.org"
 license=('LGPLv2')
-depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
+depends=('libindi-git' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
 makedepends=(cmake)
-source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=(99822ed417fd4cb9646065fe6158244495f082d714c6f1bbbbdb48ebd8e303b2)
+source=("indi-3rdparty::https://github.com/indilib/indi-3rdparty/archive/refs/heads/master.zip")
+sha256sums=(SKIP)
+
+pkgver() {
+  cd indi-3rdparty-master
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
 
 prepare() {
   mkdir -p build
@@ -22,7 +28,7 @@ build() {
         -DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
         -DQHY_FIRMWARE_INSTALL_DIR=/usr/lib/firmware \
         -DBUILD_LIBS=1 \
-        ../indi-3rdparty-$pkgver
+        ../indi-3rdparty-master
   make
 }
 

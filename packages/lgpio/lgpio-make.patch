@@ -1,0 +1,11 @@
+--- lg/Makefile	2023-05-02 20:56:25.000000000 +0000
++++ lg/Makefile	2024-02-12 13:34:23.859139054 +0000
+@@ -12,7 +12,7 @@
+ 
+ SOVERSION    = 1
+ 
+-prefix ?= /usr/local
++prefix ?= /usr
+ exec_prefix ?= $(prefix)
+ bindir ?= $(exec_prefix)/bin
+ includedir ?= $(prefix)/include

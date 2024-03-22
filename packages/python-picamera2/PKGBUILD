@@ -2,7 +2,7 @@
 
 pkgbase=python-picamera2
 pkgname=('python-pycamera2')
-pkgver=0.3.9
+pkgver=0.3.17
 pkgrel=1
 pkgdesc="Picamera2 is the libcamera-based replacement for Picamera which was a Python interface to the Raspberry Pi's legacy camera stack."
 arch=('x86_64' 'aarch64')
@@ -11,7 +11,7 @@ url="https://github.com/raspberrypi/picamera2"
 depends=('python' 'libcamera')
 makedepends=('python-setuptools' 'cython')
 source=("picamera2.tar.gz::https://github.com/raspberrypi/picamera2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('60cb9ff15656daa466565539f2c24dca9d9a786656761b06c80fee6bdfe7dc19')
+sha256sums=(fb06aa30860fbc94de9aa521eed25724fc1c3c6db1d56e40d0554b13f05bccf2)
 
 
 build() {

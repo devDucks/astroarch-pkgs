@@ -1,19 +1,19 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
-pkgname=indi_pylibcamera
-pkgver=2.0.1
-pkgrel=2
+pkgname=indi-pylibcamera
+pkgver=2.6.0
+pkgrel=1
 pkgdesc="This project implements a Raspberry Pi camera driver for INDI. It is based on the new camera framework 'libcamera' (https://github.com/raspberrypi/libcamera) which is already part of many Raspberry Pi operating systems."
 arch=(x86_64 aarch64)
 url="https://github.com/scriptorron/indi_pylibcamera"
 license=(MIT)
-depends=('kmsxx-git' 'python-pillow' 'python-pycamera2' 'python-lxml' 'python-astropy' 'python-pidng' 'python-v4l2' 'python-simplejpeg' 'libcamera-py-bindings')
+depends=('python-av' 'kmsxx-git' 'python-pillow' 'python-pycamera2' 'python-lxml' 'python-astropy' 'python-pidng' 'python-v4l2' 'python-simplejpeg' 'libcamera')
 makedepends=()
 source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=(2b7731031b372e1018b2ee4a12d2a5c1c0ecb799a3e2786ca84d8aa70431f62f)
+sha256sums=(64996e9f9e6cafef33aa97add0203d24415d167f6ea82a4fcfb91f79ddcd918a)
 
 
 build() {
-    cd ${srcdir}/${pkgname}-${pkgver}
+    cd ${srcdir}/indi_pylibcamera-${pkgver}
     python setup.py build
 
 }
@@ -32,6 +32,6 @@ package() {
 EOL
     mkdir -p $pkgdir/usr/bin
 
-    cd ${srcdir}/${pkgname}-${pkgver}
+    cd ${srcdir}/indi_pylibcamera-${pkgver}
     python setup.py install --root="$pkgdir" --optimize=1 --skip-build
 }

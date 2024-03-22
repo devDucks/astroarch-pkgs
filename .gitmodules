@@ -1,0 +1,3 @@
+[submodule "packages/kmsxx-git"]
+	path = packages/kmsxx-git
+	url = https://aur.archlinux.org/kmsxx-git.git

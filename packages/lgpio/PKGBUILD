@@ -1,0 +1,30 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=lgpio
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="lg library"
+arch=(aarch64)
+url="https://abyz.me.uk/lg/download.html"
+license=('GPLv3')
+depends=('python')
+makedepends=(cmake python-setuptools)
+source=("https://abyz.me.uk/lg/lg.zip")
+sha256sums=(bb31c6031b632911a4cbbd1d47ea326f1249b9f9efe1504eca83d1e0ef0394af)
+install=lgpio.install
+
+build() {
+  cd $srcdir/lg
+  patch --forward --strip=1 --input="${srcdir}/../lgpio-make.patch"
+  prefix=/usr make
+}
+
+package() {  
+  cp ../99-gpio.rules $pkgdir
+  cp ../rgpiod.service $pkgdir
+  cd $srcdir/lg
+  make DESTDIR="$pkgdir" install
+  mkdir -p $pkgdir/usr/lib/udev/rules.d/
+  mkdir -p $pkgdir/usr/lib/systemd/system
+  mv $pkgdir/99-gpio.rules $pkgdir/usr/lib/udev/rules.d/
+  mv $pkgdir/rgpiod.service $pkgdir/usr/lib/systemd/system
+}

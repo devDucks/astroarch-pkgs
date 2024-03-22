@@ -1,0 +1,33 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=kstars-git
+pkgver=r97.2e1ad45
+pkgrel=1
+pkgdesc="Kstars planetary software and ekos"
+arch=(x86_64 aarch64)
+conflicts=(kstars)
+url="https://edu.kde.org/kstars/"
+license=('APACHE2' 'BSD3' 'GPL' 'LGPL' 'LGPLv2' 'LGPLv3' 'MIT')
+depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff5' 'knotifyconfig5' 'kplotting5' \
+         'libindi-git' 'libraw' 'libxisf' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' \
+	 'stellarsolver>=2.0' 'xplanet' 'eigen' 'kdoctools5')
+makedepends=(cmake extra-cmake-modules)
+source=("kstars::https://github.com/KDE/kstars/archive/refs/heads/master.zip")
+sha256sums=(SKIP)
+
+pkgver() {
+  cd kstars-master
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  cmake -B build -S kstars-master \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_TESTING=OFF \
+        -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+        -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}
