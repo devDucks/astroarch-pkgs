@@ -3,7 +3,7 @@
 _pyname=astropy-iers-data
 pkgname=python-$_pyname
 pkgver=0.2024.02.05.00.30.52
-pkgrel=2
+pkgrel=3
 pkgdesc="IERS Earth Rotation and Leap Second tables for the astropy core package"
 arch=(any)
 url="https://github.com/astropy/astropy-iers-data"
@@ -22,7 +22,7 @@ build() {
 package() {
   cd $_pyname-$pkgver
   python -m installer --destdir="$pkgdir" dist/*.whl
-  mkdir -p "$pkgdir"/usr/lib/python3.11/site-packages/astropy_iers_data/data
+  mkdir -p "$pkgdir"/usr/lib/python3.12/site-packages/astropy_iers_data/data
   install -Dm644 LICENSE.rst -t "$pkgdir"/usr/share/licenses/$pkgname
-  install -Dm644 astropy_iers_data/data/* "$pkgdir"/usr/lib/python3.11/site-packages/astropy_iers_data/data
+  install -Dm644 astropy_iers_data/data/* "$pkgdir"/usr/lib/python3.12/site-packages/astropy_iers_data/data
 }
