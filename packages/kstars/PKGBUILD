@@ -1,17 +1,17 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=kstars
-pkgver=3.7.0
+pkgver=3.7.1
 pkgrel=1
 pkgdesc="Kstars planetary software and ekos"
 arch=(x86_64 aarch64)
 url="https://edu.kde.org/kstars/"
 license=('APACHE2' 'BSD3' 'GPL' 'LGPL' 'LGPLv2' 'LGPLv3' 'MIT')
 depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff5' 'knotifyconfig5' 'kplotting5' \
-         'libindi' 'libraw' 'libxisf' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' \
+         'libindi>=2.0.8' 'libraw' 'libxisf' 'qt5-datavis3d' 'qt5-quickcontrols' 'qt5-websockets' 'qtkeychain-qt5' \
 	 'stellarsolver>=2.0' 'xplanet' 'eigen' 'kdoctools5')
 makedepends=(cmake extra-cmake-modules)
 source=("https://github.com/KDE/kstars/archive/refs/heads/stable-$pkgver.zip")
-sha256sums=('04ebc2d9f8c2d655f182d2a38c6b3026481ede7448accd61aa1b7ee2e55b5a0b')
+sha256sums=('abc22befd49ee8f04fa69d8224ccc0bb25fe24073e8874f47196d6b52d460026')
 
 build() {
   cmake -B build -S $pkgname-stable-$pkgver \
