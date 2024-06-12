@@ -8,7 +8,7 @@ license=(GPL2)
 depends=('libx86emu=3.5' perl-xml-parser perl-xml-writer)
 makedepends=(flex git sysfsutils)
 options=(!emptydirs)
-source=(custom_ioctl.patch
+source=(https://gitlab.archlinux.org/archlinux/packaging/packages/hwinfo/-/raw/main/custom_ioctl.patch
         "git+$url#commit=c87f449f1d4882c71b0a1e6dc80638224a5baeed") # tag: 23.2
 b2sums=('2b1bd3b53bbfc1e545e1a70ffd6cca08f704639a104928b2c02ccca3e82000f07a470fbdf129566ece6dfb2b98fdad0e82f18cc5c2016ebfeed043b4edb295b4'
         'SKIP')
