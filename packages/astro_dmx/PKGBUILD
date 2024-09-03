@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=astro_dmx
-pkgver=2.8.1
+pkgver=2.9.7
 pkgrel=1
 pkgdesc="Video capturing software for astronomy"
 arch=(x86_64 aarch64)
@@ -9,8 +9,8 @@ license=('LGPLv2')
 depends=(gtk3 libsm)
 source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/linux-x86_64/astrodmx-capture_${pkgver}_x86-64-manual.tar.gz")
 [ "$CARCH" = "aarch64" ] && source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/linux-arm/astrodmx-glibc-2.28_${pkgver}_manual-aarch64.tar.gz")
-sha256sums=('32eff8221054649d9b957ff516485fdedb513fcb4641f542157f08915ec4592c')
-[ "$CARCH" = "aarch64" ] && sha256sums=('2e776189c04aafe76314856f2e928e116248e061a6a4e7aa7e962bf0a890687a')
+sha256sums=('60aae9562aaff2a68fb37997effadf0627a3eeab7a3c0e8cd0499157044e9ba9')
+[ "$CARCH" = "aarch64" ] && sha256sums=('60aae9562aaff2a68fb37997effadf0627a3eeab7a3c0e8cd0499157044e9ba9')
 _app_folder=AstroDMx-${pkgver}-manual
 [ "$CARCH" = "aarch64" ] && _app_folder=R-Linux-aarch64-2.28
 
