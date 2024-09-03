@@ -3,15 +3,15 @@
 
 pkgbase=libcamera
 pkgname=(
-  libcamera
-  libcamera-docs
-  libcamera-ipa
-  libcamera-tools
-  gst-plugin-libcamera
+  libcamera-rpi
+  libcamera-docs-rpi
+  libcamera-ipa-rpi
+  libcamera-tools-rpi
+  gst-plugin-libcamera-rpi
 )
-pkgver=0.2.0
-_customtag=rpt20240215
-pkgrel=2
+pkgver=0.3.0
+_customtag=rpt20240617
+pkgrel=1
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
 url="https://github.com/raspberrypi/libcamera"
@@ -39,7 +39,7 @@ makedepends=(
   texlive-core
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=(79e5ad20c1242fe3baa20b07054341da96b9a1a37c991d278e162c62a3b4f9db)
+sha256sums=('d41fab9e4ea3b758e104d8ae44347707144239530b23bb209df88a948c057d66')
 
 _pick() {
   local p="$1" f d; shift
@@ -75,7 +75,7 @@ check() {
   meson test -C build || echo "Tests require CLONE_NEWUSER/ CLONE_NEWNET."
 }
 
-package_libcamera() {
+package_libcamera-rpi() {
   license=(
     Apache-2.0
     CC0-1.0
@@ -89,7 +89,7 @@ package_libcamera() {
     gcc-libs
     glibc
     gnutls
-    libcamera-ipa
+    libcamera-ipa-rpi
     libelf
     libunwind
     libyaml
@@ -97,14 +97,15 @@ package_libcamera() {
     systemd-libs libudev.so
   )
   optdepends=(
-    'gst-plugin-libcamera: GStreamer plugin'
-    'libcamera-docs: for documentation'
-    'libcamera-tools: for applications'
+    'gst-plugin-libcamera-rpi: GStreamer plugin'
+    'libcamera-docs-rpi: for documentation'
+    'libcamera-tools-rpi: for applications'
   )
-  provides=(libcamera.so libcamera-base.so)
+  provides=(libcamera libcamera.so libcamera-base.so)
+  conflicts=(libcamera)
 
   meson install -C build --destdir "$pkgdir"
-  install -vDm 644 $pkgbase/LICENSES/{BSD-3-Clause,Linux-syscall-note,MIT}.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -vDm 644 $pkgbase/LICENSES/{BSD-3-Clause,Linux-syscall-note,MIT}.txt -t "$pkgdir/usr/share/licenses/${pkgname%"-rpi"}/"
 
   (
     cd "$pkgdir"
@@ -115,20 +116,22 @@ package_libcamera() {
   )
 }
 
-package_libcamera-docs() {
+package_libcamera-docs-rpi() {
   pkgdesc+=" - documentation"
   license=(
     CC-BY-4.0
     CC-BY-SA-4.0
     CC0-1.0
   )
+  conflicts=("libcamera-docs")
+  provides=("libcamera-docs")
 
-  mv -v $pkgname/* "$pkgdir"
+  mv -v ${pkgname%"-rpi"}/* "$pkgdir"
   mv -v "$pkgdir/usr/share/doc/$pkgbase-$pkgver/" "$pkgdir/usr/share/doc/$pkgbase/"
   rm -frv "$pkgdir/usr/share/doc/$pkgbase/html/.buildinfo"
 }
 
-package_libcamera-ipa() {
+package_libcamera-ipa-rpi() {
   pkgdesc+=" - signed IPA"
   license=(
     BSD-2-Clause
@@ -140,20 +143,22 @@ package_libcamera-ipa() {
   depends=(
     gcc-libs
     glibc
-    libcamera libcamera.so libcamera-base.so
+    libcamera-rpi libcamera.so libcamera-base.so
   )
   # stripping requires re-signing of IPA libs, so we do it manually
   options=(!strip)
+  provides=(libcamera-ipa)
+  conflicts=(libcamera-ipa)
 
-  strip $pkgname/usr/lib/libcamera/*{.so,proxy}
-  for _lib in $pkgname/usr/lib/libcamera/*.so; do
+  strip ${pkgname%"-rpi"}/usr/lib/libcamera/*{.so,proxy}
+  for _lib in ${pkgname%"-rpi"}/usr/lib/libcamera/*.so; do
     $pkgbase/src/ipa/ipa-sign.sh "$(find build -type f -iname "*ipa-priv-key.pem")" "$_lib" "$_lib.sign"
   done
-  mv -v $pkgname/* "$pkgdir"
-  install -vDm 644 $pkgbase/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  mv -v ${pkgname%"-rpi"}/* "$pkgdir"
+  install -vDm 644 $pkgbase/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/${pkgname%"-rpi"}/"
 }
 
-package_libcamera-tools() {
+package_libcamera-tools-rpi() {
   pkgdesc+=" - tools"
   license=(
     BSD-2-Clause
@@ -165,7 +170,7 @@ package_libcamera-tools() {
     gcc-libs
     glibc
     gtest
-    libcamera libcamera.so libcamera-base.so
+    libcamera-rpi libcamera.so libcamera-base.so
     libdrm
     libevent libevent-2.1.so libevent_pthreads-2.1.so
     libjpeg-turbo libjpeg.so
@@ -174,14 +179,15 @@ package_libcamera-tools() {
     qt5-base
     sdl2
   )
-  conflicts=("$pkgbase-tests<0.0.1-2")
+  conflicts=("$pkgbase-tests<0.0.1-2" "libcamera-tools")
   replaces=("$pkgbase-tests<0.0.1-2")
+  provides=("libcamera-tools")
 
-  mv -v $pkgname/* "$pkgdir"
-  install -vDm 644 $pkgbase/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+  mv -v ${pkgname%"-rpi"}/* "$pkgdir"
+  install -vDm 644 $pkgbase/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/${pkgname%"-rpi"}/"
 }
 
-package_gst-plugin-libcamera() {
+package_gst-plugin-libcamera-rpi() {
   pkgdesc="Multimedia graph framework - libcamera plugin"
   license=(
     CC0-1.0
@@ -193,8 +199,9 @@ package_gst-plugin-libcamera() {
     glib2 libg{lib,object}-2.0.so
     gstreamer
     gst-plugins-base-libs
-    libcamera libcamera.so libcamera-base.so
+    libcamera-rpi libcamera.so libcamera-base.so
   )
-
-  mv -v $pkgname/* "$pkgdir"
+  conflicts=(gst-plugin-libcamera)
+  provides=(gst-plugin-camera)
+  mv -v ${pkgname%"-rpi"}/* "$pkgdir"
 }
