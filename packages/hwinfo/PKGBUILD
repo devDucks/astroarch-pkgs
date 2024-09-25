@@ -1,25 +1,16 @@
-# x86
-# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
-# Contributor: Kaiting Chen <kaitocracy@gmail.com>
-# Contributor: Gergely Imreh <imrehg@gmail.com>
-# Contributor: champus
-# Contributor: madeye
-# Contributor: ranguvar
-# Contributor: ninja_pt
-# x86, aarch64
 # Mantainer: Mattia Procopio <matto.astro@gmail.com>
 
 pkgname=hwinfo
 pkgver=23.2
-pkgrel=1
+pkgrel=2
 pkgdesc='Hardware detection tool from openSUSE'
-arch=(x86_64 aarch64)
+arch=(aarch64)
 url='https://github.com/openSUSE/hwinfo'
 license=(GPL2)
-depends=('libx86emu=3.5' perl-xml-parser perl-xml-writer)
-makedepends=(flex git sysfsutils)
+depends=(perl-xml-parser perl-xml-writer)
+makedepends=(flex git sysfsutils patch)
 options=(!emptydirs)
-source=(custom_ioctl.patch
+source=(https://gitlab.archlinux.org/archlinux/packaging/packages/hwinfo/-/raw/main/custom_ioctl.patch
         "git+$url#commit=c87f449f1d4882c71b0a1e6dc80638224a5baeed") # tag: 23.2
 b2sums=('2b1bd3b53bbfc1e545e1a70ffd6cca08f704639a104928b2c02ccca3e82000f07a470fbdf129566ece6dfb2b98fdad0e82f18cc5c2016ebfeed043b4edb295b4'
         'SKIP')
