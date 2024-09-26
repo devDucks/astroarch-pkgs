@@ -8,14 +8,16 @@ pkgname=(
   libcamera-ipa-rpi
   libcamera-tools-rpi
   gst-plugin-libcamera-rpi
+  python-libcamera-rpi
 )
-pkgver=0.3.0
-_customtag=rpt20240617
-pkgrel=1
+pkgver=0.3.1
+_customtag=rpt20240906
+pkgrel=2
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
 url="https://github.com/raspberrypi/libcamera"
 makedepends=(
+  boost
   doxygen
   git
   glib2
@@ -27,19 +29,23 @@ makedepends=(
   libtiff
   libyaml
   llvm-libs
+  lttng-ust
   meson
+  cmake
+  pybind11
   python-jinja
   python-ply
   python-sphinx
   python-pyyaml
-  qt5-base
-  qt5-tools
+  python-pip
+  qt6-base
+  qt6-tools
   sdl2
   systemd
   texlive-core
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=('d41fab9e4ea3b758e104d8ae44347707144239530b23bb209df88a948c057d66')
+sha256sums=('2ac7ac94fe7d5b84cf88fc131bc39b9a5fb985a900b4316f59da6769402beadd')
 
 _pick() {
   local p="$1" f d; shift
@@ -51,6 +57,11 @@ _pick() {
   done
 }
 
+#pkgver() {
+#  cd $pkgbase
+#  git describe --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//g'
+#}
+
 prepare() {
   mv $pkgbase-$pkgver-$_customtag $pkgbase
   cd $pkgbase
@@ -59,16 +70,10 @@ prepare() {
   printf "%s\n" "$pkgver" > .tarball-version
 }
 
-build() {
-  local meson_options=(
-    -D v4l2=true
-    -D tracing=disabled
-    -D test=true
-    -D pycamera=enabled
-  )
-
-  arch-meson $pkgbase build "${meson_options[@]}"
+build() { 
+  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4 -Dipas=rpi/vc4 -Dv4l2=true -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled
   meson compile -C build
+  #ninja -C build install
 }
 
 check() {
@@ -113,6 +118,7 @@ package_libcamera-rpi() {
     _pick $pkgbase-ipa usr/lib/libcamera/
     _pick $pkgbase-tools usr/bin/{cam,qcam,lc-compliance}
     _pick gst-plugin-$pkgbase usr/lib/gstreamer-*
+    _pick python-$pkgbase usr/lib/python*
   )
 }
 
@@ -176,7 +182,7 @@ package_libcamera-tools-rpi() {
     libjpeg-turbo libjpeg.so
     libtiff libtiff.so
     libyaml
-    qt5-base
+    qt6-base
     sdl2
   )
   conflicts=("$pkgbase-tests<0.0.1-2" "libcamera-tools")
@@ -203,5 +209,21 @@ package_gst-plugin-libcamera-rpi() {
   )
   conflicts=(gst-plugin-libcamera)
   provides=(gst-plugin-camera)
+  mv -v ${pkgname%"-rpi"}/* "$pkgdir"
+}
+
+package_python-libcamera-rpi() {
+  pkgdesc+=" - Python integration"
+  license=(
+    CC0-1.0
+    LGPL-2.1-or-later
+  )
+  depends=(
+    gcc-libs
+    glibc
+    libcamera
+    python
+  )
+
   mv -v ${pkgname%"-rpi"}/* "$pkgdir"
 }
