@@ -1,1 +1,41 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=astroarch-onboarding
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='AstroArch onboarding'
+arch=(aarch64)
+url="https://github.com/devDucks/astroarch-onboarding"
+license=('BSD-2-Clause'
+        'CC-BY-4.0'
+        'CC0-1.0'
+        'GPL-3.0-or-later'
+        'LGPL-2.1-only'
+        'LGPL-3.0-or-later'
+        'MIT')
+depends=('ckbcomp'
+        'perl-xml-parser'
+        'perl-xml-writer'
+        'sysfsutils'
+        'setconf'
+        'cmake'
+        'yaml-cpp')
+makedepends=('extra-cmake-modules' 'git')
+source=(https://github.com/devDucks/astroarch-onboarding/archive/refs/tags/v${pkgver}.tar.gz)
+sha256sums=('SKIP')
 
+build() {
+        cd "${srcdir}/${pkgname}-${pkgver}"
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DWITH_QT6=ON -DINSTALL_CONFIG=ON ..
+        make -j$(nproc)
+}
+
+package() {
+        cd "${srcdir}/${pkgname}-${pkgver}/build"
+        make DESTDIR="$pkgdir" install
+        cp -R "${srcdir}/${pkgname}-${pkgver}/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
+        cp -R "${srcdir}/${pkgname}-${pkgver}/src/.astroarch" "$pkgdir/usr/share/calamares/"
+        rm "$pkgdir/usr/share/applications/calamares.desktop"
+        cp "${srcdir}/${pkgname}-${pkgver}/src/.astroarch/configs/calamares_astroarch/AstroArch-onboarding.desktop" "$pkgdir/usr/share/applications/AstroArch-onboarding.desktop"
+}
