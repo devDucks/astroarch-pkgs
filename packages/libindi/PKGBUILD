@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=libindi
-pkgver=2.0.9
+pkgver=2.1.0
 pkgrel=1
 pkgdesc="Indi core library"
 arch=(x86_64 aarch64)
@@ -11,7 +11,7 @@ depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' 'libuv'
 	 'libev')
 makedepends=('cmake' 'boost')
 source=("https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('8f342eaea3732913b1a761d382c858899e564561d305a86f8331e497b7aed8bf')
+sha256sums=('03b26711224cf001c69bb31596abc1da2767212f2b8d40fa133df0d0752b802e')
 
 build() {
   cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
