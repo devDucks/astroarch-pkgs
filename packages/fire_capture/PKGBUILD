@@ -1,29 +1,49 @@
-# Maintainer: Mattia Procopio <matto.astro@gmail.com>
+# Maintainer: Ed Lee <ed@thefamilee.co.uk>
+# Previous maintainer: Mattia Procopio <matto.astro@gmail.com>
 # Original AUR PKGBUILD mantainer Daniel Reibl <janos.daniel.reibl@pm.me>
+# Most changes from previous work thanks to Stéphane Carlin
 # This build contains some changes that allow FireCapture to work on aarch64 and start with no path issues
 pkgname=firecapture
-pkgver=2.7.14
+pkgver=2.7.14a
 pkgrel=1
 pkgdesc="The leading planetary capture tool"
 arch=(aarch64)
-url="http://www.firecapture.de"
+url="https://www.firecapture.de"
 license=('custom:firecapture')
-depends=('libusb')
-source=(fire_capture.deb::https://www.thefamilee.co.uk/public/Astro/firecapture_${pkgver}_aarch64.deb)
-sha256sums=(3bbcabe388c238094e81580a7d93108248b01687c76a4dfdb98b7518ed3fef51)
-_filename=fire_capture.deb
+depends=('libusb' 'jdk-openjdk' 'indi-3rdparty-libs')
+source=("${pkgname}_${pkgver}_${arch}.deb::https://github.com/devDucks/astroarch-pkgs/raw/refs/heads/main/packages/fire_capture/${pkgname}_${pkgver}_${arch}.deb")
+sha512sums=(fe5a78a7d363eea8c996cf789b80a92f665c3edda3d10b3efac7a7cb9b80afb9e023d8150f960dafc9e69887be634fb03be5481f5d8425096a1319a3be99534d)
+_filename=${pkgname}_${pkgver}_${arch}.deb
 
 prepare() {
-    ar p ${_filename} data.tar.xz > data.tar.xz
+	ar p ${_filename} data.tar.xz > data.tar.xz
 }
 
 package() {
-    echo "  -> Extracting the data.tar.xz..."
-    bsdtar -xf data.tar.xz -C "$pkgdir/"
-    #mkdir -p "$pkgdir/usr/lib"
+	echo "  -> Extracting the data.tar.xz..."
+	bsdtar -xf data.tar.xz -C "$pkgdir/"
+	chmod 755 "$pkgdir/opt"
+	chmod 755 "$pkgdir/usr"
+	chmod 755 "$pkgdir/usr/share"
+	chmod 755 "$pkgdir/usr/share/applications"
+	chmod 755 "$pkgdir/opt/FireCapture_v2.7/start.sh"
+	chmod -R 755 "$pkgdir/opt/FireCapture_v2.7/jre/bin/"
+	ln -s "/opt/FireCapture_v2.7/AltairGPCam.so" "$pkgdir/opt/FireCapture_v2.7/AltairGPCam_x64.so"
+	ln -s "/opt/FireCapture_v2.7/ASICam.so" "$pkgdir/opt/FireCapture_v2.7/ASICam_x64.so"
+	ln -s "/opt/FireCapture_v2.7/Debayer.so" "$pkgdir/opt/FireCapture_v2.7/Debayer_x64.so"
+	ln -s "/opt/FireCapture_v2.7/Ephemerides.so" "$pkgdir/opt/FireCapture_v2.7/Ephemerides_x64.so"
+	ln -s "/opt/FireCapture_v2.7/ImageUtil.so" "$pkgdir/opt/FireCapture_v2.7/ImageUtil_x64.so"
+	ln -s "/opt/FireCapture_v2.7/PlayerOneCam.so" "$pkgdir/opt/FireCapture_v2.7/PlayerOneCam_x64.so"
+	ln -s "/opt/FireCapture_v2.7/QHYCCDCam.so" "$pkgdir/opt/FireCapture_v2.7/QHYCCDCam_x64.so"
+	ln -s "/opt/FireCapture_v2.7/SvbonyCam.so" "$pkgdir/opt/FireCapture_v2.7/SvbonyCam_x64.so"
+	ln -s "/opt/FireCapture_v2.7/ToupCam.so" "$pkgdir/opt/FireCapture_v2.7/ToupCam_x64.so"
 
-    # License
-    install -Dm644 "$pkgdir/opt/FireCapture_v2.7/license.txt" "$pkgdir/usr/share/licenses/$pkgname/license.txt"
-    mv "$pkgdir/lib/" "$pkgdir/usr/lib"
-    rm -rf "$pkgdir/lib"
+	mkdir -p "$pkgdir/etc/udev/"
+	cp -R "$pkgdir/lib/udev/rules.d/" "$pkgdir/etc/udev/rules.d/"
+	mv "$pkgdir/lib/" "$pkgdir/usr/lib"
+	chown -R astronaut:astronaut "$pkgdir/opt/FireCapture_v2.7"
+	sed -i 's:./jre/bin/java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:g' "$pkgdir/opt/FireCapture_v2.7/start.sh"
+
+	# License
+	install -Dm644 "$pkgdir/opt/FireCapture_v2.7/license.txt" "$pkgdir/usr/share/licenses/$pkgname/license.txt"
 }
