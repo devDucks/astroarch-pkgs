@@ -28,6 +28,8 @@ package() {
 	chmod 755 "$pkgdir/usr/share/applications"
 	chmod 755 "$pkgdir/opt/FireCapture_v2.7/start.sh"
 	chmod -R 755 "$pkgdir/opt/FireCapture_v2.7/jre/bin/"
+
+	# Symlinks due to aarch64 packaging of hard named multi-arch lib interface classes
 	ln -s "/opt/FireCapture_v2.7/AltairGPCam.so" "$pkgdir/opt/FireCapture_v2.7/AltairGPCam_x64.so"
 	ln -s "/opt/FireCapture_v2.7/ASICam.so" "$pkgdir/opt/FireCapture_v2.7/ASICam_x64.so"
 	ln -s "/opt/FireCapture_v2.7/Debayer.so" "$pkgdir/opt/FireCapture_v2.7/Debayer_x64.so"
@@ -38,11 +40,18 @@ package() {
 	ln -s "/opt/FireCapture_v2.7/SvbonyCam.so" "$pkgdir/opt/FireCapture_v2.7/SvbonyCam_x64.so"
 	ln -s "/opt/FireCapture_v2.7/ToupCam.so" "$pkgdir/opt/FireCapture_v2.7/ToupCam_x64.so"
 
+	#udev rules - demote priority to avoid clashes
 	mkdir -p "$pkgdir/etc/udev/"
 	cp -R "$pkgdir/lib/udev/rules.d/" "$pkgdir/etc/udev/rules.d/"
+	rename 99- 47- $pkgdir/etc/udev/rules.d/*.rules
+	chmod -R 755 "$pkgdir/etc/udev/rules.d"
+
 	mv "$pkgdir/lib/" "$pkgdir/usr/lib"
 	chown -R astronaut:astronaut "$pkgdir/opt/FireCapture_v2.7"
+
+	# Tweaks for targeting AstroArch - use system jre & astronaut in default capture directory
 	sed -i 's:./jre/bin/java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:g' "$pkgdir/opt/FireCapture_v2.7/start.sh"
+	sed -i "s:captureRootDir=/home/pi:captureRootDir=/home/astronaut:g" "$pkgdir/opt/FireCapture_v2.7/FireCapture.ini"
 
 	# License
 	install -Dm644 "$pkgdir/opt/FireCapture_v2.7/license.txt" "$pkgdir/usr/share/licenses/$pkgname/license.txt"
