@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=indi-pylibcamera
 pkgver=2.6.4
-pkgrel=1
+pkgrel=2
 pkgdesc="This project implements a Raspberry Pi camera driver for INDI. It is based on the new camera framework 'libcamera' (https://github.com/raspberrypi/libcamera) which is already part of many Raspberry Pi operating systems."
 arch=(x86_64 aarch64)
 url="https://github.com/scriptorron/indi_pylibcamera"
@@ -24,6 +24,7 @@ sha256sums=(9da2083834c4b2a821dbbc037d130c213c18c3d401a31474bf123a2fc43b70ae)
 
 build() {
     cd ${srcdir}/indi_pylibcamera-${pkgver}
+    patch -Np1 -i ../../pylibcamera.patch
     python setup.py build
 
 }

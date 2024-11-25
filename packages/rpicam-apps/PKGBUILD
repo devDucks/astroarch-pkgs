@@ -6,7 +6,7 @@ pkgdesc="This is a small suite of libcamera-based applications to drive the came
 arch=(aarch64)
 url="https://github.com/raspberrypi/rpicam-apps"
 license=('LGPLv2' 'MIT' 'GPLv3' 'BSD2' 'BSD3')
-depends=(boost libpisp)
+depends=(boost libpisp python-piexif python-prctl)
 makedepends=('meson' 'python-sphinx' 'python-jinja' 'libpisp')
 source=("https://github.com/raspberrypi/rpicam-apps/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=(de7e18ce62fff615a86ca5ac304602c0f301d187c667df87c5ebce408b50e3e0)
@@ -17,6 +17,8 @@ build() {
 }
 
 package() {
+    mkdir -p $pkgdir/usr/lib/udev/rules.d/
     cd $srcdir/rpicam-apps-$pkgver
     DESTDIR="$pkgdir" ninja -C build install
+    install -m 755 $srcdir/../99-raspberrypi-dmaheap.rules $pkgdir/usr/lib/udev/rules.d/
 }

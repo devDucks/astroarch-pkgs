@@ -1,0 +1,24 @@
+# Maintainer: Mattia Procopio <matto.astro@gmail.com>
+pkgname=python-cmake
+pkgver=3.30.3
+pkgrel=1
+pkgdesc="The CMake python wheels"
+arch=('any')
+url='https://github.com/scikit-build/cmake-python-distributions'
+license=('BSD3' 'Apache2.0')
+depends=('python')
+makedepends=('cmake' 'python-cmake-build-extension' 'python-scikit-build-core')
+source=("https://github.com/scikit-build/cmake-python-distributions/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('bf9f4c619da1b09e602a07c66ada237e1a0a23786e6d84fe46c6142f69858b66')
+
+
+build() {
+    cd "$srcdir/cmake-python-distributions-$pkgver"
+    python -m build --wheel --no-isolation --skip-dependency-check
+}
+
+package() {
+    cd "$srcdir/cmake-python-distributions-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    rm -rf $pkgdir/usr/bin
+}
