@@ -1,8 +1,8 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=indi-pylibcamera
-pkgver=2.6.4
-pkgrel=2
-pkgdesc="This project implements a Raspberry Pi camera driver for INDI. It is based on the new camera framework 'libcamera' (https://github.com/raspberrypi/libcamera) which is already part of many Raspberry Pi operating systems."
+pkgver=2.7.0
+pkgrel=1
+pkgdesc="INDI driver for Raspberry Pi cameras, written in Python and based on the libcamera framework."
 arch=(x86_64 aarch64)
 url="https://github.com/scriptorron/indi_pylibcamera"
 license=(MIT)
@@ -16,17 +16,16 @@ depends=('python-av'
          'python-v4l2'
          'python-simplejpeg'
          'libcamera-rpi'
-	 'rpicam-apps')
+	     'rpicam-apps')
 makedepends=()
 source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=(9da2083834c4b2a821dbbc037d130c213c18c3d401a31474bf123a2fc43b70ae)
+sha256sums=(79c9a57f7f07ae0448daf51ffb6e9153056f808d46b17b819e0d47bedf466858)
 
 
 build() {
     cd ${srcdir}/indi_pylibcamera-${pkgver}
     patch -Np1 -i ../../pylibcamera.patch
     python setup.py build
-
 }
 
 package() {
@@ -36,7 +35,7 @@ package() {
   <devGroup group="CCDs">
     <device label="INDI pylibcamera">
       <driver name="INDI pylibcamera">indi_pylibcamera</driver>
-      <version>2.6.4</version>
+      <version>$pkgver</version>
     </device>
   </devGroup>
 </driversList>
