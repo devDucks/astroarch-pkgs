@@ -16,7 +16,7 @@ depends=('python-av'
          'python-v4l2'
          'python-simplejpeg'
          'libcamera-rpi'
-	     'rpicam-apps')
+         'rpicam-apps')
 makedepends=()
 source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=(79c9a57f7f07ae0448daf51ffb6e9153056f808d46b17b819e0d47bedf466858)
