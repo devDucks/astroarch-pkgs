@@ -1,7 +1,7 @@
 # Maintainer:  <matto.astro@gmail.com>
 pkgname=astroarch-status-notifications
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Check if there are any announcement to run and show them as desktop notifications"
 arch=('aarch64' 'x86_64')
 url="https://github.com/devDucks/astroarch-status-notifications"
@@ -20,7 +20,9 @@ build() {
 
 package() {
   mkdir -p $pkgdir/usr/bin/
-  mkdir -p $pkgdir/usr/lib/systemd/system
+  mkdir -p $pkgdir/usr/lib/systemd/user
+  mkdir -p $pkgdir/usr/share/pixmaps
   mv $srcdir/$pkgname-$pkgver/target/release/$pkgname $pkgdir/usr/bin
+  cp ../astroarch.png $pkgdir/usr/share/pixmaps
   cp ../aa_notifications.service $pkgdir/usr/lib/systemd/system
 }

@@ -1,11 +1,10 @@
 [Unit]
 Description=Look for astroarch news and show desktop notifications
-Requires=display-manager.service
-After=display-manager.service
 
 [Service]
 Type=simple
-ExecStart=sleep 90 && /usr/bin/astroarch-status-notifications
+ExecStartPre=sleep 30
+ExecStart=/usr/bin/astroarch-status-notifications
 Restart=no
 
 [Install]
