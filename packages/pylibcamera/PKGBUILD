@@ -24,7 +24,6 @@ sha256sums=(79c9a57f7f07ae0448daf51ffb6e9153056f808d46b17b819e0d47bedf466858)
 
 build() {
     cd ${srcdir}/indi_pylibcamera-${pkgver}
-    patch -Np1 -i ../../pylibcamera.patch
     python setup.py build
 }
 
