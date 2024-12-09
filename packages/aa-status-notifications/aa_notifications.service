@@ -2,8 +2,9 @@
 Description=Look for astroarch news and show desktop notifications
 
 [Service]
+User=astronaut
 Type=simple
-ExecStartPre=sleep 30
+ExecStartPre=sleep 45
 ExecStart=/usr/bin/astroarch-status-notifications
 Restart=no
 

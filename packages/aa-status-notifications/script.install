@@ -1,5 +1,4 @@
 post_install () {
   systemctl daemon-reload
   systemctl enable aa_notifications.service
-  systemctl start aa_notifications.service
 }
