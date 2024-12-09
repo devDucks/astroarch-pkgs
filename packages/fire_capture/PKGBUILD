@@ -5,7 +5,7 @@
 # This build contains some changes that allow FireCapture to work on aarch64 and start with no path issues
 pkgname=firecapture
 pkgver=2.7.14a
-pkgrel=1
+pkgrel=2
 pkgdesc="The leading planetary capture tool"
 arch=(aarch64)
 url="https://www.firecapture.de"
@@ -14,6 +14,7 @@ depends=('libusb' 'jdk-openjdk' 'indi-3rdparty-libs')
 source=("${pkgname}_${pkgver}_${arch}.deb::https://github.com/devDucks/astroarch-pkgs/raw/refs/heads/main/packages/fire_capture/${pkgname}_${pkgver}_${arch}.deb")
 sha512sums=(fe5a78a7d363eea8c996cf789b80a92f665c3edda3d10b3efac7a7cb9b80afb9e023d8150f960dafc9e69887be634fb03be5481f5d8425096a1319a3be99534d)
 _filename=${pkgname}_${pkgver}_${arch}.deb
+install=fc.install
 
 prepare() {
 	ar p ${_filename} data.tar.xz > data.tar.xz
@@ -47,7 +48,7 @@ package() {
 	chmod -R 755 "$pkgdir/etc/udev/rules.d"
 
 	mv "$pkgdir/lib/" "$pkgdir/usr/lib"
-	chown -R astronaut:astronaut "$pkgdir/opt/FireCapture_v2.7"
+	# chown -R astronaut:astronaut "$pkgdir/opt/FireCapture_v2.7"
 
 	# Tweaks for targeting AstroArch - use system jre & astronaut in default capture directory
 	sed -i 's:./jre/bin/java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:java -Xms${heap}m -Xmx${heap}m -classpath "$cp" de.wonderplanets.firecapture.gui.FireCapture:g' "$pkgdir/opt/FireCapture_v2.7/start.sh"
