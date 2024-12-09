@@ -22,5 +22,5 @@ package() {
   mkdir -p $pkgdir/usr/bin/
   mkdir -p $pkgdir/usr/lib/systemd/system
   mv $srcdir/$pkgname-$pkgver/target/release/$pkgname $pkgdir/usr/bin
-  mv ../aa_notifications.service $pkgdir/usr/lib/systemd/system
+  cp ../aa_notifications.service $pkgdir/usr/lib/systemd/system
 }
