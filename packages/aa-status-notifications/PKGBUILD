@@ -1,0 +1,26 @@
+# Maintainer:  <matto.astro@gmail.com>
+pkgname=astroarch-status-notifications
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Check if there are any announcement to run and show them as desktop notifications"
+arch=('aarch64' 'x86_64')
+url="https://github.com/devDucks/astroarch-status-notifications"
+license=('MIT')
+depends=(gcc-libs)
+makedepends=(rustup)
+install=script.install
+source=("https://github.com/devDucks/astroarch-status-notifications/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('a7682f873ef12d430bb3092b4d06e723c7bff34d5b6644d62a5ddb14e9b3e17b')
+
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  cargo build --release
+}
+
+package() {
+  mkdir -p $pkgdir/usr/bin/
+  mkdir -p $pkgdir/usr/lib/systemd/system
+  mv $srcdir/$pkgname-$pkgver/target/release/$pkgname $pkgdir/usr/bin
+  mv ../aa_notifications.service $pkgdir/usr/lib/systemd/system
+}
