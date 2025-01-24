@@ -2,8 +2,8 @@
 _NAME='PiDNG'
 pkgname=python-pidng
 pkgver=4.0.9
-pkgrel=1
-_commit=5b9dd828e20537421a1aec877e8ba8e9c7f13e7c
+pkgrel=2
+_commit=e2f5a8da509c46ea8f85117e2a4ee27ccb60a7ce
 pkgdesc="Create Adobe DNG RAW files using Python."
 url="https://github.com/schoolpost/pidng"
 license=('MIT')
