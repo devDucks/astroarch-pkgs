@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=indi-pylibcamera
 pkgver=2.7.0
-pkgrel=1
+pkgrel=2
 pkgdesc="INDI driver for Raspberry Pi cameras, written in Python and based on the libcamera framework."
 arch=(x86_64 aarch64)
 url="https://github.com/scriptorron/indi_pylibcamera"
