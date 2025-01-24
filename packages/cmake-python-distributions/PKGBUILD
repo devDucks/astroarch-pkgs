@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=python-cmake
 pkgver=3.30.3
-pkgrel=1
+pkgrel=2
 pkgdesc="The CMake python wheels"
 arch=('any')
 url='https://github.com/scikit-build/cmake-python-distributions'
@@ -9,7 +9,7 @@ license=('BSD3' 'Apache2.0')
 depends=('python')
 makedepends=('cmake' 'python-cmake-build-extension' 'python-scikit-build-core')
 source=("https://github.com/scikit-build/cmake-python-distributions/archive/refs/tags/$pkgver.tar.gz")
-sha256sums=('bf9f4c619da1b09e602a07c66ada237e1a0a23786e6d84fe46c6142f69858b66')
+sha256sums=('ff5555ee26ba92f6d0269c9938610ca558fee92d2918141d9e411c263a4fa3f2')
 
 
 build() {
