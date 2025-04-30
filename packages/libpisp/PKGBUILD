@@ -1,12 +1,12 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=libpisp
-pkgver=1.0.7
+pkgver=1.2.0
 pkgrel=1
 pkgdesc="A helper library to generate run-time configuration for the Raspberry Pi ISP (PiSP), consisting of the Frontend and Backend hardware components."
 arch=(aarch64)
 url="https://github.com/raspberrypi/libpisp"
 source=("https://github.com/raspberrypi/libpisp/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('ccff506448e2ab3b8e1efbcc632b7609bb3c3ee0b94f865b7093c1ecd2f04582')
+sha256sums=('8de714f82b8c20277a1241d10b4b809ce562b7cc56f977d9f5c0f92669d5e417')
 makedepends=(meson)
 
 prepare() {
