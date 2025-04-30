@@ -4,15 +4,15 @@
 # Most changes from previous work thanks to Stéphane Carlin
 # This build contains some changes that allow FireCapture to work on aarch64 and start with no path issues
 pkgname=firecapture
-pkgver=2.7.14a
-pkgrel=2
+pkgver=2.7.15
+pkgrel=1
 pkgdesc="The leading planetary capture tool"
 arch=(aarch64)
 url="https://www.firecapture.de"
 license=('custom:firecapture')
 depends=('libusb' 'jdk-openjdk' 'indi-3rdparty-libs')
 source=("${pkgname}_${pkgver}_${arch}.deb::https://github.com/devDucks/astroarch-pkgs/raw/refs/heads/main/packages/fire_capture/${pkgname}_${pkgver}_${arch}.deb")
-sha512sums=(fe5a78a7d363eea8c996cf789b80a92f665c3edda3d10b3efac7a7cb9b80afb9e023d8150f960dafc9e69887be634fb03be5481f5d8425096a1319a3be99534d)
+sha512sums=(d453ea00b00f9905e428cad0694bd63f75ccc1bd3b02ed503aed361b22dd03d8b21683377509b74df8d8e828355f0fe114535eb9d1457bf45d4b49e7994b86dd)
 _filename=${pkgname}_${pkgver}_${arch}.deb
 install=fc.install
 
@@ -29,17 +29,6 @@ package() {
 	chmod 755 "$pkgdir/usr/share/applications"
 	chmod 755 "$pkgdir/opt/FireCapture_v2.7/start.sh"
 	chmod -R 755 "$pkgdir/opt/FireCapture_v2.7/jre/bin/"
-
-	# Symlinks due to aarch64 packaging of hard named multi-arch lib interface classes
-	ln -s "/opt/FireCapture_v2.7/AltairGPCam.so" "$pkgdir/opt/FireCapture_v2.7/AltairGPCam_x64.so"
-	ln -s "/opt/FireCapture_v2.7/ASICam.so" "$pkgdir/opt/FireCapture_v2.7/ASICam_x64.so"
-	ln -s "/opt/FireCapture_v2.7/Debayer.so" "$pkgdir/opt/FireCapture_v2.7/Debayer_x64.so"
-	ln -s "/opt/FireCapture_v2.7/Ephemerides.so" "$pkgdir/opt/FireCapture_v2.7/Ephemerides_x64.so"
-	ln -s "/opt/FireCapture_v2.7/ImageUtil.so" "$pkgdir/opt/FireCapture_v2.7/ImageUtil_x64.so"
-	ln -s "/opt/FireCapture_v2.7/PlayerOneCam.so" "$pkgdir/opt/FireCapture_v2.7/PlayerOneCam_x64.so"
-	ln -s "/opt/FireCapture_v2.7/QHYCCDCam.so" "$pkgdir/opt/FireCapture_v2.7/QHYCCDCam_x64.so"
-	ln -s "/opt/FireCapture_v2.7/SvbonyCam.so" "$pkgdir/opt/FireCapture_v2.7/SvbonyCam_x64.so"
-	ln -s "/opt/FireCapture_v2.7/ToupCam.so" "$pkgdir/opt/FireCapture_v2.7/ToupCam_x64.so"
 
 	#udev rules - demote priority to avoid clashes
 	mkdir -p "$pkgdir/etc/udev/"
