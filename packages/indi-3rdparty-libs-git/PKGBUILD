@@ -1,13 +1,14 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-libs-git
-pkgver=r97.2e1ad45
+pkgver=r175.be62be2
 pkgrel=1
 pkgdesc="Indi 3rd party libraries"
+provides=(indi-3rdparty-libs)
 conflicts=(indi-3rdparty-libs)
 arch=(x86_64 aarch64)
 url="https://indilib.org"
 license=('LGPLv2')
-depends=('libindi-git' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
+depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
 makedepends=(cmake)
 source=("indi-3rdparty::https://github.com/indilib/indi-3rdparty/archive/refs/heads/master.zip")
 sha256sums=(SKIP)
@@ -24,6 +25,7 @@ prepare() {
 build() {
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
         -DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
         -DQHY_FIRMWARE_INSTALL_DIR=/usr/lib/firmware \
