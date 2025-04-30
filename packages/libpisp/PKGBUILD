@@ -7,6 +7,7 @@ arch=(aarch64)
 url="https://github.com/raspberrypi/libpisp"
 source=("https://github.com/raspberrypi/libpisp/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('ccff506448e2ab3b8e1efbcc632b7609bb3c3ee0b94f865b7093c1ecd2f04582')
+makedepends=(meson)
 
 prepare() {
     cd $srcdir/libpisp-$pkgver
