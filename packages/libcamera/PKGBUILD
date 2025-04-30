@@ -10,9 +10,9 @@ pkgname=(
   gst-plugin-libcamera-rpi
   python-libcamera-rpi
 )
-pkgver=0.3.1
-_customtag=rpt20240906
-pkgrel=1
+pkgver=0.5.0
+_customtag=rpt20250429
+pkgrel=2
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
 url="https://github.com/raspberrypi/libcamera"
