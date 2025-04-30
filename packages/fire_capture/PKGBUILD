@@ -12,7 +12,7 @@ url="https://www.firecapture.de"
 license=('custom:firecapture')
 depends=('libusb' 'jdk-openjdk' 'indi-3rdparty-libs')
 source=("${pkgname}_${pkgver}_${arch}.deb::https://github.com/devDucks/astroarch-pkgs/raw/refs/heads/main/packages/fire_capture/${pkgname}_${pkgver}_${arch}.deb")
-sha512sums=(d453ea00b00f9905e428cad0694bd63f75ccc1bd3b02ed503aed361b22dd03d8b21683377509b74df8d8e828355f0fe114535eb9d1457bf45d4b49e7994b86dd)
+sha512sums=(721c6d122f35d47f87393b75ac7f4bdbd234f2cfaa38673a0e4e0538f221b42f692d4a266b83b8dd241cde0593beb1913abb0bc115b4e5a07fdaa8212208c3ba)
 _filename=${pkgname}_${pkgver}_${arch}.deb
 install=fc.install
 
