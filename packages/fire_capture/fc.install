@@ -1,0 +1,3 @@
+post_install() {
+  chown -R astronaut:astronaut /opt/FireCapture_v2.7
+}

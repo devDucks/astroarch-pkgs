@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=python-simplejpeg
 pkgver=1.7.6
-pkgrel=1
+pkgrel=2
 pkgdesc="simplejpeg is a simple package based on recent versions of libturbojpeg for fast JPEG encoding and decoding."
 arch=('any')
 url="https://pypi.org/project/simplejpeg/"

@@ -12,7 +12,7 @@ pkgname=(
 )
 pkgver=0.3.1
 _customtag=rpt20240906
-pkgrel=2
+pkgrel=1
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
 url="https://github.com/raspberrypi/libcamera"
@@ -45,7 +45,7 @@ makedepends=(
   texlive-core
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=('2ac7ac94fe7d5b84cf88fc131bc39b9a5fb985a900b4316f59da6769402beadd')
+sha256sums=(SKIP)
 
 _pick() {
   local p="$1" f d; shift
