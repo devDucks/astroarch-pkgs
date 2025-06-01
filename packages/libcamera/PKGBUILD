@@ -45,7 +45,7 @@ makedepends=(
   texlive-core
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=(SKIP)
+sha256sums=('43af12e026b2fcf6002a33f98db5f042de9d306013f2e2f9e2446fde7c567c82')
 
 _pick() {
   local p="$1" f d; shift
@@ -70,8 +70,8 @@ prepare() {
   printf "%s\n" "$pkgver" > .tarball-version
 }
 
-build() { 
-  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4 -Dipas=rpi/vc4 -Dv4l2=true -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled
+build() {
+  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=enabled -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled
   meson compile -C build
   #ninja -C build install
 }
