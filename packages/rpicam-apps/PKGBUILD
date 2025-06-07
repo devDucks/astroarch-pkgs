@@ -9,7 +9,7 @@ license=('LGPLv2' 'MIT' 'GPLv3' 'BSD2' 'BSD3')
 depends=(boost libpisp python-piexif python-prctl)
 makedepends=('meson' 'python-sphinx' 'python-jinja' 'libpisp')
 source=("https://github.com/raspberrypi/rpicam-apps/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=(SKIP)
+sha256sums=('22f54d861be15b6e83ada605a208fee19575cc425069c40e038fce6cdd5ff446')
 
 # paru python-pidng-git kmsxx-git
 build() {
