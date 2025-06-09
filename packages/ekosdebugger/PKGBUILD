@@ -1,0 +1,32 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=ekosdebugger
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Ekos & INDI Debugger Tool"
+arch=(aarch64)
+url="https://github.com/knro/ekosdebugger"
+license=('GPLv2')
+depends=('gdb')
+makedepends=(cmake)
+source=("https://github.com/sc74/ekosdebugger/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+  mkdir -p build
+}
+
+
+build() {
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=release ../ekosdebugger-${pkgver}
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="${pkgdir}" install
+  mkdir -p ${pkgdir}/usr/share/pixmaps/
+  mkdir -p ${pkgdir}/usr/share/applications
+  cp ${srcdir}/ekosdebugger-${pkgver}/resources/ekosdebugger.svg ${pkgdir}/usr/share/pixmaps/ekosdebugger.svg
+  cp ${srcdir}/../ekosdebugger.desktop ${pkgdir}/usr/share/applications/ekosdebugger.desktop
+}
