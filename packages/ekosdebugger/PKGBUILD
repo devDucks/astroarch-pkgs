@@ -8,7 +8,7 @@ url="https://github.com/knro/ekosdebugger"
 license=('GPLv2')
 depends=('gdb')
 makedepends=(cmake)
-source=("https://github.com/devDucks/ekosdebugger/archive/refs/tags/v${pkgver}.tar.gz")
+source=("https://github.com/sc74/ekosdebugger/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
 prepare() {
@@ -25,4 +25,8 @@ build() {
 package() {
   cd build
   make DESTDIR="${pkgdir}" install
+  mkdir -p ${pkgdir}/usr/share/pixmaps/
+  mkdir -p ${pkgdir}/usr/share/applications
+  cp ${srcdir}/ekosdebugger-${pkgver}/resources/ekosdebugger.svg ${pkgdir}/usr/share/pixmaps/ekosdebugger.svg
+  cp ${srcdir}/../ekosdebugger.desktop ${pkgdir}/usr/share/applications/ekosdebugger.desktop
 }

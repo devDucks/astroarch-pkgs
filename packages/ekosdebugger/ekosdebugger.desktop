@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Ekosdebugger
+GenericName=Ekos & INDI Debugger Tool
+Comment=Ekos & INDI Debugger Tool
+Exec=ekosdebugger
+Icon=/usr/share/pixmaps/ekosdebugger.svg
+Terminal=false
+Type=Application
+Categories=Astronomy;
