@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=kstars
-pkgver=3.7.6
+pkgver=3.7.7
 pkgrel=2
 pkgdesc="Kstars planetary software and ekos"
 arch=(x86_64 aarch64)
@@ -11,7 +11,7 @@ depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff5' 'knotifyconfig5' 'kplo
 	 'stellarsolver>=2.0' 'xplanet' 'eigen' 'kdoctools5' 'opencv')
 makedepends=(cmake extra-cmake-modules)
 source=("https://github.com/KDE/kstars/archive/refs/heads/stable-$pkgver.zip")
-sha256sums=('SKIP')
+sha256sums=('76782133c044fc47abbc01ece8d9bf62401a2d994d04255d196bca2547a3da30')
 
 build() {
   cmake -B build -S $pkgname-stable-$pkgver \

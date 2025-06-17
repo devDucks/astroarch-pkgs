@@ -18,29 +18,24 @@ depends=('python-av'
          'libcamera-rpi'
          'rpicam-apps')
 makedepends=()
-source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v$pkgver.tar.gz")
+source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('add1fd2f96670f69091e4797351ebed8207bfef20078bf8821474f2903d553a7')
 
 
 build() {
+    sed -i "s/INDI pylibcamera/pylibcamera Main/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera.xml
+    sed -i "s/INDI pylibcamera2/pylibcamera2 Guide/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera2.xml
+    sed -i "s/INDI pylibcamera3/pylibcamera3/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera3.xml
+    sed -i "s/INDI pylibcamera4/pylibcamera4/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera4.xml
+    sed -i "s/INDI pylibcamera5/pylibcamera5/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera5.xml
     cd ${srcdir}/indi_pylibcamera-${pkgver}
     python setup.py build
 }
 
 package() {
-    mkdir -p $pkgdir/usr/share/indi
-    tee $pkgdir/usr/share/indi/indi_pylibcamera.xml >/dev/null <<EOL
-<driversList>
-  <devGroup group="CCDs">
-    <device label="INDI pylibcamera">
-      <driver name="INDI pylibcamera">indi_pylibcamera</driver>
-      <version>$pkgver</version>
-    </device>
-  </devGroup>
-</driversList>
-EOL
-    mkdir -p $pkgdir/usr/bin
-
+    mkdir -p ${pkgdir}/usr/share/indi
+    cp ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera*.xml ${pkgdir}/usr/share/indi
+    mkdir -p ${pkgdir}/usr/bin
     cd ${srcdir}/indi_pylibcamera-${pkgver}
-    python setup.py install --root="$pkgdir" --optimize=1 --skip-build
+    python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
 }
