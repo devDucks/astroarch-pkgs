@@ -1,9 +1,10 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=kstars-git
-pkgver=r97.2e1ad45
+pkgver=r176.a10e93d
 pkgrel=1
 pkgdesc="Kstars planetary software and ekos"
 arch=(x86_64 aarch64)
+provides=(kstars)
 conflicts=(kstars)
 url="https://edu.kde.org/kstars/"
 license=('APACHE2' 'BSD3' 'GPL' 'LGPL' 'LGPLv2' 'LGPLv3' 'MIT')
