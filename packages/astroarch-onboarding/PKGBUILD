@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-onboarding
-pkgver=1.0.0
+pkgver=1.0.6
 pkgrel=1
 pkgdesc='AstroArch onboarding'
 arch=(aarch64)
