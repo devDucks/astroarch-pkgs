@@ -1,10 +1,11 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-drivers-git
-pkgver=r175.be62be2
+pkgver=r180.ea00854
 pkgrel=1
 pkgdesc="Indi 3rd party drivers"
 arch=(x86_64 aarch64)
 url="https://indilib.org"
+provides=(indi-3rdparty-drivers)
 conflicts=(indi-3rdparty-drivers)
 license=('LGPLv2')
 depends=('indi-3rdparty-libs' 'limesuite' 'libdc1394' 'fxload' 'zeromq' 'urjtag' 'dfu-util' 'libxisf')
@@ -25,6 +26,7 @@ build() {
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DSKIP_SETCAP=true \
 	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
 	-DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
 	../indi-3rdparty-master

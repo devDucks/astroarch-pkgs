@@ -12,7 +12,7 @@ pkgname=(
 )
 pkgver=0.5.0
 _customtag=rpt20250429
-pkgrel=2
+pkgrel=3
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
 url="https://github.com/raspberrypi/libcamera"
