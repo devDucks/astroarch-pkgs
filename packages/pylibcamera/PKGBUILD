@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=indi-pylibcamera
-pkgver=2.8.1
+pkgver=2.9.0
 pkgrel=2
 pkgdesc="INDI driver for Raspberry Pi cameras, written in Python and based on the libcamera framework."
 arch=(x86_64 aarch64)
@@ -15,11 +15,12 @@ depends=('python-av'
          'python-pidng'
          'python-v4l2'
          'python-simplejpeg'
+         'python-libcamera-rpi'
          'libcamera-rpi'
          'rpicam-apps')
 makedepends=()
 source=("https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('add1fd2f96670f69091e4797351ebed8207bfef20078bf8821474f2903d553a7')
+sha256sums=('165360d5c1822d07b64d801ecb5f9cd7833949ecb89c9d8be8ec1dcebb1c6f68')
 
 
 build() {
