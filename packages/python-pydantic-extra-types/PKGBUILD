@@ -1,5 +1,6 @@
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Christian Heusel <gromit@archlinux.org>
+# Maintainer: Mattia Procopio <matto.astro@gmail.com>
 
 _name=pydantic-extra-types
 pkgname=python-pydantic-extra-types
