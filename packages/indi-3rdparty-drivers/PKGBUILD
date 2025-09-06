@@ -10,7 +10,7 @@ depends=('indi-3rdparty-libs' 'limesuite' 'libdc1394' 'fxload' 'zeromq' 'urjtag'
          'pigpio')
 makedepends=(cmake libgpiod)
 source=("https://github.com/indilib/indi-3rdparty/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('3bad853c8a45b96a805c13c33ed71a553e58038aa7d4eac7307a0c4aac4510cc')
 install=drivers.install
 
 

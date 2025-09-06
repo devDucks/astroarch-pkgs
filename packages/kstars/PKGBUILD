@@ -11,7 +11,7 @@ depends=('breeze-icons' 'hicolor-icon-theme' 'knewstuff5' 'knotifyconfig5' 'kplo
 	 'stellarsolver>=2.0' 'xplanet' 'eigen' 'kdoctools5' 'opencv')
 makedepends=(cmake extra-cmake-modules)
 source=("https://github.com/KDE/kstars/archive/refs/heads/stable-$pkgver.zip")
-sha256sums=('76782133c044fc47abbc01ece8d9bf62401a2d994d04255d196bca2547a3da30')
+sha256sums=('b363123d64dec37059cf68f09edef28b373123c336b60a9c8ce1d13752a1f22e')
 
 build() {
   cmake -B build -S $pkgname-stable-$pkgver \

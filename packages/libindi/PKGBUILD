@@ -11,7 +11,7 @@ depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' 'libuv'
 	 'libev')
 makedepends=('cmake' 'boost')
 source=("https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('c93294865c20fd9e3355898851f6a1ecce481789c00a01a9aba59e40ac28b7f5')
+sha256sums=('c7b4603691de6b239e87cf75a1624602943c1b0d0a47cfe781002dcb3dc73b0f')
 
 build() {
   cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
