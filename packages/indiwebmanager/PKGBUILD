@@ -1,0 +1,22 @@
+# Maintainer: Mattia Procopio <matto.astro@gmail.com>
+pkgname=indiwebmanager
+pkgver=1
+pkgrel=1
+pkgdesc="INDI Web Manager is a simple Web Application to manage INDI Server"
+arch=('any')
+url="https://github.com/knro/indiwebmanager"
+license=('LGPL-2.1')
+depends=(python python-build python-installer python-wheel python-setuptools python-requests python-psutil python-bottle python-importlib-metadata python-fastapi uvicorn python-jinja)
+source=("git+${url}.git")
+sha256sums=("SKIP")
+
+
+build() {
+    cd $pkgname
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd $pkgname
+    python -m installer --destdir="$pkgdir" dist/*.whl
+}

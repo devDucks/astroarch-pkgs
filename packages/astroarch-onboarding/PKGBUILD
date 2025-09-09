@@ -1,41 +1,45 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-onboarding
-pkgver=1.0.6
+pkgver=1.0.9
 pkgrel=1
 pkgdesc='AstroArch onboarding'
 arch=(aarch64)
 url="https://github.com/devDucks/astroarch-onboarding"
 license=('BSD-2-Clause'
-        'CC-BY-4.0'
-        'CC0-1.0'
-        'GPL-3.0-or-later'
-        'LGPL-2.1-only'
-        'LGPL-3.0-or-later'
-        'MIT')
+	'CC-BY-4.0'
+	'CC0-1.0'
+	'GPL-3.0-or-later'
+	'LGPL-2.1-only'
+	'LGPL-3.0-or-later'
+	'MIT')
 depends=('ckbcomp'
-        'perl-xml-parser'
-        'perl-xml-writer'
-        'sysfsutils'
-        'setconf'
-        'cmake'
-        'yaml-cpp')
+	'perl-xml-parser'
+	'perl-xml-writer'
+	'sysfsutils'
+	'setconf'
+	'cmake'
+	'yaml-cpp')
 makedepends=('extra-cmake-modules' 'git')
-source=(https://github.com/devDucks/astroarch-onboarding/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('SKIP')
+source=(https://github.com/sc74/astroarch-onboarding/archive/refs/heads/calamares.zip)
+sha256sums=('a9d784be609ed83996fb2ec6e6c807be7d6f0d3b63ebb71de9f9823548f917f3')
 
 build() {
-        cd "${srcdir}/${pkgname}-${pkgver}"
-        mkdir -p build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DWITH_QT6=ON -DINSTALL_CONFIG=ON ..
-        make -j$(nproc)
+	cd "${srcdir}/${pkgname}-calamares"
+	mkdir -p build
+	cd build
+	cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DWITH_QT6=ON -DINSTALL_CONFIG=ON ..
+	make -j$(nproc)
 }
 
 package() {
-        cd "${srcdir}/${pkgname}-${pkgver}/build"
-        make DESTDIR="$pkgdir" install
-        cp -R "${srcdir}/${pkgname}-${pkgver}/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
-        cp -R "${srcdir}/${pkgname}-${pkgver}/src/.astroarch" "$pkgdir/usr/share/calamares/"
-        rm "$pkgdir/usr/share/applications/calamares.desktop"
-        cp "${srcdir}/${pkgname}-${pkgver}/src/.astroarch/configs/calamares_astroarch/AstroArch-onboarding.desktop" "$pkgdir/usr/share/applications/AstroArch-onboarding.desktop"
+	cd "${srcdir}/${pkgname}-calamares/build"
+	make DESTDIR="$pkgdir" install
+	mkdir -p "$pkgdir/home/astronaut/"
+	mkdir -p "$pkgdir/etc/polkit-1/rules.d/"
+	cp -R "${srcdir}/${pkgname}-calamares/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
+	cp -R "${srcdir}/${pkgname}-calamares/src/.astroarch" "$pkgdir/home/astronaut/"
+	rm -f "$pkgdir/usr/share/polkit-1/actions/com.github.calamares.calamares.policy"
+	cp -R "${srcdir}/${pkgname}-calamares/src/.astroarch/configs/com.github.calamares.calamares.policy" "$pkgdir/usr/share/polkit-1/actions/com.github.calamares.calamares.policy"
+	cp -R "${srcdir}/${pkgname}-calamares/src/.astroarch/configs/49-nopasswd-calamares-vnc.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-vnc.rules"
+	cp -R "${srcdir}/${pkgname}-calamares/src/.astroarch/configs/49-nopasswd-calamares-xrdp.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-xrdp.rules"
 }
