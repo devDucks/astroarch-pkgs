@@ -1,17 +1,28 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=phd2
-pkgver=2.6.13dev2
+pkgver=2.6.13dev7
 pkgrel=1
 pkgdesc="OpenPHDGuiding"
 arch=(x86_64 aarch64)
 url="https://openphdguiding.org/"
 license=('LGPL')
-depends=('libindi' 'cfitsio' 'libnova' 'curl' 'wxwidgets-gtk3' 'wxwidgets-common' 'libtiff5')
+depends=(libindi
+	 cfitsio
+	 hdf5
+         libnova
+	 curl
+	 wxwidgets-gtk3
+	 wxwidgets-common
+	 libtiff5
+         vtk)
 makedepends=(cmake)
 source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('1d4926b41131087973bed71580af6ee0fecda89ea88343cfeec228491bdee7e5')
+sha256sums=('c7916966e16c307544acc10a82ccafd0cd54757d019e42b8d1a12c3e1096d53d')
 
 prepare() {
+  cd phd2-$pkgver
+  patch -Np1 -i $srcdir/../phd2.patch  
+  cd ..
   mkdir -p build
   cd build
   cmake -DUSE_SYSTEM_LIBINDI=ON \
@@ -27,5 +38,6 @@ build() {
 
 package() {
   cd build
-  make DESTDIR="$pkgdir" install
+  make DESTDIR="$pkgdir" -j2 install
 }
+
