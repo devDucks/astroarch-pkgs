@@ -21,7 +21,7 @@ depends=('ckbcomp'
 	'yaml-cpp')
 makedepends=('extra-cmake-modules' 'git')
 source=(https://github.com/sc74/astroarch-onboarding/archive/refs/heads/calamares.zip)
-sha256sums=('a9d784be609ed83996fb2ec6e6c807be7d6f0d3b63ebb71de9f9823548f917f3')
+sha256sums=('7b117bc2a01d43a27763fb2c40d94ff1df5088ec9a2ce6490783f2c45a524a08')
 
 build() {
 	cd "${srcdir}/${pkgname}-calamares"
