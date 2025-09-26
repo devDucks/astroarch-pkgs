@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-onboarding
-pkgver=1.1.4
+pkgver=1.1.5
 pkgrel=1
 pkgdesc='AstroArch onboarding'
 arch=(aarch64)
@@ -20,11 +20,11 @@ depends=('ckbcomp'
 	'cmake'
 	'yaml-cpp')
 makedepends=('extra-cmake-modules' 'git')
-source=(https://github.com/sc74/astroarch-onboarding/archive/refs/heads/calamares.zip)
-sha256sums=('d799cc4cd67312b7d907f30f53788efd1e470a64244a38603a57eedd07188c56')
+source=("https://github.com/sc74/astroarch-onboarding/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('4a69f1421cef6dbf9f17ef17d1c053afc43bd423ac34680acdf2fe011ca6e06c')
 
 build() {
-	cd "${srcdir}/${pkgname}-calamares"
+	cd "${srcdir}/${pkgname}-${pkgver}"
 	mkdir -p build
 	cd build
 	cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DWITH_QT6=ON -DINSTALL_CONFIG=ON ..
@@ -32,15 +32,14 @@ build() {
 }
 
 package() {
-	cd "${srcdir}/${pkgname}-calamares/build"
+	cd "${srcdir}/${pkgname}-${pkgver}/build"
 	make DESTDIR="$pkgdir" install
 	mkdir -p "$pkgdir/home/astronaut/"
 	mkdir -p "$pkgdir/etc/polkit-1/rules.d/"
-	mkdir -p "$pkgdir/home/astronaut/.config/astroarch_onboarding"
-	cp -R "${srcdir}/${pkgname}-calamares/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
-	cp -R "${srcdir}/${pkgname}-calamares/src/astroarch_onboarding" "$pkgdir/home/astronaut/.config/"
+	cp -Rf "${srcdir}/${pkgname}-${pkgver}/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
+	cp -Rf "${srcdir}/${pkgname}-${pkgver}/src/usr/share/astroarch_onboarding" "$pkgdir/usr/share/"
 	rm -f "$pkgdir/usr/share/polkit-1/actions/com.github.calamares.calamares.policy"
-	cp -R "${srcdir}/${pkgname}-calamares/src/astroarch_onboarding/configs/com.github.calamares.calamares.policy" "$pkgdir/usr/share/polkit-1/actions/com.github.calamares.calamares.policy"
-	cp -R "${srcdir}/${pkgname}-calamares/src/astroarch_onboarding/configs/49-nopasswd-calamares-vnc.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-vnc.rules"
-	cp -R "${srcdir}/${pkgname}-calamares/src/astroarch_onboarding/configs/49-nopasswd-calamares-xrdp.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-xrdp.rules"
+	cp -f "${srcdir}/${pkgname}-${pkgver}/src/usr/share/astroarch_onboarding/configs/com.github.calamares.calamares.policy" "$pkgdir/usr/share/polkit-1/actions/com.github.calamares.calamares.policy"
+	cp -f "${srcdir}/${pkgname}-${pkgver}/src/usr/share/astroarch_onboarding/configs/49-nopasswd-calamares-vnc.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-vnc.rules"
+	cp -f "${srcdir}/${pkgname}-${pkgver}/src/usr/share/astroarch_onboarding/configs/49-nopasswd-calamares-xrdp.rules" "$pkgdir/etc/polkit-1/rules.d/49-nopasswd-calamares-xrdp.rules"
 }
