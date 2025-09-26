@@ -34,7 +34,6 @@ build() {
 package() {
 	cd "${srcdir}/${pkgname}-${pkgver}/build"
 	make DESTDIR="$pkgdir" install
-	mkdir -p "$pkgdir/home/astronaut/"
 	mkdir -p "$pkgdir/etc/polkit-1/rules.d/"
 	cp -Rf "${srcdir}/${pkgname}-${pkgver}/src/branding/astroarch" "$pkgdir/usr/share/calamares/branding/"
 	cp -Rf "${srcdir}/${pkgname}-${pkgver}/src/usr/share/astroarch_onboarding" "$pkgdir/usr/share/"
