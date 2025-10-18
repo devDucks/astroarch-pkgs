@@ -6,7 +6,7 @@ _upstream_name="PyAV"
 pkgdesc="Pythonic bindings for FFmpeg"
 url="https://pyav.basswood-io.com"
 
-pkgver=14.4.0.10b93f9
+pkgver=16.1.0.7687256
 pkgrel=1
 
 arch=(aarch64)

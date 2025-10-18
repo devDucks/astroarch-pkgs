@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=indiwebmanager
-pkgver=1
+pkgver=1.1614aff
 pkgrel=1
 pkgdesc="INDI Web Manager is a simple Web Application to manage INDI Server"
 arch=('any')

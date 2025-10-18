@@ -10,8 +10,8 @@ pkgname=(
   gst-plugin-libcamera-rpi
   python-libcamera-rpi
 )
-pkgver=0.5.0
-_customtag=rpt20250429
+pkgver=0.5.2
+_customtag=rpt20250903
 pkgrel=3
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
@@ -43,9 +43,11 @@ makedepends=(
   sdl2
   systemd
   texlive-core
+  nlohmann-json
+  python-sphinxcontrib-doxylink
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=('43af12e026b2fcf6002a33f98db5f042de9d306013f2e2f9e2446fde7c567c82')
+sha256sums=('d9c9b60484667a3f19e49ae4e226045ecaaa0848ffb10e73e80b295f21e10bd8')
 
 _pick() {
   local p="$1" f d; shift

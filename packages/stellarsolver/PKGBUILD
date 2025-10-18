@@ -1,5 +1,5 @@
 pkgname=stellarsolver
-pkgver=2.6
+pkgver=2.7
 pkgrel=1
 pkgdesc='The cross platform Sextractor and Astrometry.net-Based internal astrometric solver'
 arch=(x86_64 aarch64)
@@ -8,7 +8,7 @@ license=(GPL3)
 depends=(qt5-base gsl wcslib)
 makedepends=(cmake)
 source=(https://github.com/rlancaste/stellarsolver/archive/refs/tags/$pkgver.tar.gz)
-sha256sums=('1176c1c0144705779e80cbcddcdcde1318b9e9cba889b5ce0f6d77ced66c4733')
+sha256sums=('36ff495f325920b9a23b7c3f7453a99c8d405e0984d4b27da7568625cb6c76c9')
 
 build() {
   cmake -B build -S $pkgname-$pkgver\

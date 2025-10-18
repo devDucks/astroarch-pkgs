@@ -1,11 +1,12 @@
 pkgname=siril
-pkgver='1.2.6'
+pkgver='1.4.0'
 pkgrel=1
+beta="-beta4"
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
 arch=('aarch64' 'x86_64')
 license=('GPL3')
 depends=('gtk3' 'lcms2' 'cfitsio' 'wcslib' 'fftw' 'gsl' 'opencv' 'json-glib' 'ffms2')
-makedepends=('meson' 'cmake' 'ninja')
+makedepends=('meson' 'cmake' 'ninja' 'gtksourceview4' 'libgit2')
 optdepends=('gvfs: web access'
             'exiv2: get thumbnails from files'
             'libraw: DSLR RAW files import'
@@ -20,16 +21,16 @@ optdepends=('gvfs: web access'
 
 options=(!lto)
 
-source=("https://free-astro.org/download/siril-${pkgver}.tar.bz2")
-sha256sums=('312f82e78599f796d163a6d1c90589df1ed920b9ff2bb7ab5b808e43872817fa')
+source=("https://free-astro.org/download/siril-${pkgver}${beta}.tar.bz2")
+sha256sums=('69ee75745bdef9f2ce50ee646b869422e0b17632f9720844d96a8201fd12bbe5')
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver/"
+  cd "$srcdir/$pkgname-$pkgver${beta}/"
   meson setup --prefix /usr --buildtype release _build
   ninja -C _build
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver/"
+  cd "$srcdir/$pkgname-$pkgver${beta}/"
   meson install -C _build --destdir "$pkgdir"
 }
