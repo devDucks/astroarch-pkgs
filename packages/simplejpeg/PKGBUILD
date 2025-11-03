@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=python-simplejpeg
-pkgver=1.8.2
+pkgver=1.9.0
 pkgrel=1
 pkgdesc="simplejpeg is a simple package based on recent versions of libturbojpeg for fast JPEG encoding and decoding."
 arch=('any')
@@ -9,7 +9,7 @@ license=('MIT')
 depends=('python' 'libjpeg-turbo' 'python-cmake')
 makedepends=('cmake' 'python-cmake-build-extension' 'python-scikit-build-core')
 source=("https://github.com/jfolz/simplejpeg/archive/refs/tags/$pkgver.tar.gz")
-sha256sums=('75cb48b79a18ecf6ed8d8af5596ce573cc08bd6bf79ce8425eb5379a283e3cf4')
+sha256sums=('f220ad05e1a1ccecb39d32bcf17853b586686e4f33dfb513288672ca126da6a1')
 
 
 build() {

@@ -43,6 +43,8 @@ makedepends=(
   sdl2
   systemd
   texlive-core
+  nlohmann-json
+  python-sphinxcontrib-doxylink
 )
 source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
 sha256sums=(ef4cf0893998cbf4d0b36f3e94a68665feadb9b5cc15e26be924ace6114e02ec)
