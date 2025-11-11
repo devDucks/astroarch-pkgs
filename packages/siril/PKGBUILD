@@ -1,12 +1,12 @@
 pkgname=siril
 pkgver='1.4.0'
-pkgrel=1
+pkgrel=2
 beta="-beta4"
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
 arch=('aarch64' 'x86_64')
 license=('GPL3')
-depends=('gtk3' 'lcms2' 'cfitsio' 'wcslib' 'fftw' 'gsl' 'opencv' 'json-glib' 'ffms2')
-makedepends=('meson' 'cmake' 'ninja' 'gtksourceview4' 'libgit2')
+depends=('gtk3' 'lcms2' 'cfitsio' 'wcslib' 'fftw' 'gsl' 'opencv' 'json-glib' 'ffms2' 'gtksourceview4' 'libgit2')
+makedepends=('meson' 'cmake' 'ninja' 'libgit2')
 optdepends=('gvfs: web access'
             'exiv2: get thumbnails from files'
             'libraw: DSLR RAW files import'
@@ -16,8 +16,7 @@ optdepends=('gvfs: web access'
             'libjxl: JPEG XL format support'
             'libheif: HEIF format files import'
             'libpng: PNG format support'
-            'ffmpeg: avi export support'
-            'libgit2: git integration to sync with the official siril-scripts repository')
+            'ffmpeg: avi export support')
 
 options=(!lto)
 

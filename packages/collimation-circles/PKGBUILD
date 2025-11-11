@@ -25,7 +25,7 @@ package() {
     mkdir -p $pkgdir/usr/lib
     mkdir -p $pkgdir/usr/share/pixmaps
     mkdir -p $pkgdir/usr/share/applications
-    
+
     cp $srcdir/${_customname}-version-${pkgver}/build/CollimationCircles $pkgdir/usr/bin
     cp $srcdir/${_customname}-version-${pkgver}/Graphics/ic_launcher.svg ${pkgdir}/usr/share/pixmaps/collimation_circles.svg
     cp $srcdir/../collimation-circles.desktop ${pkgdir}/usr/share/applications
