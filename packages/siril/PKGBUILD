@@ -1,7 +1,7 @@
 pkgname=siril
 pkgver='1.4.0'
 pkgrel=2
-beta="-beta4"
+rc="-rc"
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
 arch=('aarch64' 'x86_64')
 license=('GPL3')
@@ -20,16 +20,16 @@ optdepends=('gvfs: web access'
 
 options=(!lto)
 
-source=("https://free-astro.org/download/siril-${pkgver}${beta}.tar.bz2")
-sha256sums=('69ee75745bdef9f2ce50ee646b869422e0b17632f9720844d96a8201fd12bbe5')
+source=("https://free-astro.org/download/siril-${pkgver}${rc}${pkgrel}.tar.bz2")
+sha256sums=('16a3e23d8ae40fd982f7b4bd1955f11bc63117aab4510addabd294fe5416f5a8')
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver${beta}/"
+  cd "$srcdir/$pkgname-$pkgver${rc}${pkgrel}/"
   meson setup --prefix /usr --buildtype release _build
   ninja -C _build
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver${beta}/"
+  cd "$srcdir/$pkgname-$pkgver${rc}${pkgrel}/"
   meson install -C _build --destdir "$pkgdir"
 }
