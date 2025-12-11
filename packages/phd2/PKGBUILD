@@ -1,34 +1,34 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=phd2
-pkgver=2.6.13dev7
+pkgver=2.6.14
 pkgrel=1
 pkgdesc="OpenPHDGuiding"
 arch=(x86_64 aarch64)
 url="https://openphdguiding.org/"
 license=('LGPL')
-depends=(libindi
-	 cfitsio
-	 hdf5
+depends=(cfitsio
+         curl
+         hdf5
          libnova
-	 curl
-	 wxwidgets-gtk3
-	 wxwidgets-common
-	 libtiff5
-         vtk)
-makedepends=(cmake)
+         libtiff5
+         vtk
+         wxwidgets-common	 
+         wxwidgets-gtk3)
+makedepends=(cmake eigen)
 source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('c7916966e16c307544acc10a82ccafd0cd54757d019e42b8d1a12c3e1096d53d')
+sha256sums=('e5fdf91c9ba85589de0e3801af1c51a09b619fe7a10a2e46a5e9e3fb315cf336')
 
 prepare() {
-  cd phd2-$pkgver
-  patch -Np1 -i $srcdir/../phd2.patch  
-  cd ..
   mkdir -p build
   cd build
-  cmake -DUSE_SYSTEM_LIBINDI=ON \
+  cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DUSE_SYSTEM_LIBINDI=ON \
+        -DCMAKE_C_COMPILER_LAUNCHER=distcc \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=distcc \
         -DUSE_SYSTEM_LIBUSB=ON \
         -DUSE_SYSTEM_GTEST=ON \
-  ../phd2-$pkgver
+        -DEIGEN_SRC=/usr/include/eigen3 \
+        ../phd2-$pkgver
 }
 
 build() {
@@ -38,6 +38,6 @@ build() {
 
 package() {
   cd build
-  make DESTDIR="$pkgdir" -j2 install
+  make DESTDIR="$pkgdir" install
 }
 
