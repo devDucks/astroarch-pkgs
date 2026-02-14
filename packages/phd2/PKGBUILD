@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=phd2
 pkgver=2.6.14
-pkgrel=1
+pkgrel=2
 pkgdesc="OpenPHDGuiding"
 arch=(x86_64 aarch64)
 url="https://openphdguiding.org/"
