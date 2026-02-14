@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio <matto.astro@gmail.com>
 pkgname=python-v4l2
 pkgver=0.3.5
-pkgrel=1
+pkgrel=2
 pkgdesc="Python v4l2"
 arch=('any')
 url="https://pypi.python.org/pypi/v4l2"

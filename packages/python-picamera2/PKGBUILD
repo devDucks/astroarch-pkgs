@@ -3,7 +3,7 @@
 pkgbase=python-picamera2
 pkgname=('python-pycamera2')
 pkgver=0.3.31
-pkgrel=1
+pkgrel=2
 pkgdesc="Picamera2 is the libcamera-based replacement for Picamera which was a Python interface to the Raspberry Pi's legacy camera stack."
 arch=('x86_64' 'aarch64')
 license=('BSD2')
