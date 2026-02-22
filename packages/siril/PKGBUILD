@@ -1,5 +1,5 @@
 pkgname=siril
-pkgver=1.4.0
+pkgver=1.4.2
 pkgrel=1
 beta="-beta4"
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
@@ -31,16 +31,16 @@ makedepends=(cmake
 optdepends=('ffmpeg: For AVI export')
 options=(!lto)
 
-source=("https://free-astro.org/download/siril-${pkgver}${rc}${pkgrel}.tar.bz2")
-sha256sums=('16a3e23d8ae40fd982f7b4bd1955f11bc63117aab4510addabd294fe5416f5a8')
+source=("https://free-astro.org/download/siril-${pkgver}.tar.bz2")
+sha256sums=('451915627ae461ef992ac0f83bd3ff1db5102d72ca379eee55b9be4f12b1162b')
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver${rc}${pkgrel}/"
+  cd "$srcdir/$pkgname-$pkgver/"
   meson setup --prefix /usr --buildtype release _build
   ninja -C _build
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver${rc}${pkgrel}/"
+  cd "$srcdir/$pkgname-$pkgver/"
   meson install -C _build --destdir "$pkgdir"
 }
