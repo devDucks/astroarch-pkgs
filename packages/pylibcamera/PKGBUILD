@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=indi-pylibcamera
-pkgver=3.1.0
+pkgver=3.2.0
 pkgrel=2
 pkgdesc="INDI driver for Raspberry Pi cameras, written in Python and based on the libcamera framework."
 arch=(x86_64 aarch64)
@@ -20,22 +20,17 @@ depends=(python-av
          rpicam-apps)
 makedepends=()
 source=(https://github.com/scriptorron/indi_pylibcamera/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('e406e1e8f7ca583cb1697f867cb2ad2682ef8ac674287593b94b0158d1918a8d')
+sha256sums=('a436001088e460456b6fc8dd3d17dcb8b5e65c2d34bc3752aa0e92774b72a0ab')
 
 
 build() {
-    sed -i "s/INDI pylibcamera/pylibcamera Main/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera.xml
-    sed -i "s/INDI pylibcamera2/pylibcamera2 Guide/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera2.xml
-    sed -i "s/INDI pylibcamera3/pylibcamera3/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera3.xml
-    sed -i "s/INDI pylibcamera4/pylibcamera4/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera4.xml
-    sed -i "s/INDI pylibcamera5/pylibcamera5/g" ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera5.xml
     cd ${srcdir}/indi_pylibcamera-${pkgver}
     python setup.py build
 }
 
 package() {
     mkdir -p ${pkgdir}/usr/share/indi
-    cp ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera*.xml ${pkgdir}/usr/share/indi
+    cp ${srcdir}/indi_pylibcamera-${pkgver}/src/indi_pylibcamera/indi_pylibcamera.xml ${pkgdir}/usr/share/indi
     mkdir -p ${pkgdir}/usr/bin
     cd ${srcdir}/indi_pylibcamera-${pkgver}
     python setup.py install --root="${pkgdir}" --optimize=1 --skip-build
