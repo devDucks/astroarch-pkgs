@@ -10,8 +10,8 @@ pkgname=(
   gst-plugin-libcamera-rpi
   python-libcamera-rpi
 )
-pkgver=0.5.2
-_customtag=rpt20250903
+pkgver=0.7.0
+_customtag=rpt20260205
 pkgrel=3
 pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
 arch=(aarch64)
@@ -19,6 +19,7 @@ url="https://github.com/raspberrypi/libcamera"
 makedepends=(
   boost
   doxygen
+  llvm-libs
   git
   glib2
   graphviz
@@ -28,6 +29,7 @@ makedepends=(
   libjpeg-turbo
   libtiff
   libyaml
+  libyuv
   libpisp
   llvm-libs
   lttng-ust
@@ -45,10 +47,13 @@ makedepends=(
   systemd
   texlive-core
   nlohmann-json
+  python-sphinx-book-theme
   python-sphinxcontrib-doxylink
 )
-source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz")
-sha256sums=('d9c9b60484667a3f19e49ae4e226045ecaaa0848ffb10e73e80b295f21e10bd8')
+source=("libcamera.tar.gz::https://github.com/raspberrypi/libcamera/archive/refs/tags/v$pkgver+$_customtag.tar.gz"
+        "$pkgbase-fix-python3.14-macro-redefinition.patch")
+sha256sums=('0060fd0b6b10803505fecd13ee379e1b88e1ab6399940f7d924f6b2bb8a99df0'
+            '2eb9407d11ea073e3c392bbb584b75803ce1b2a3d73afaefda5c1fa799c151ad')
 
 _pick() {
   local p="$1" f d; shift
@@ -68,13 +73,13 @@ _pick() {
 prepare() {
   mv $pkgbase-$pkgver-$_customtag $pkgbase
   cd $pkgbase
-
+  patch -Np1 < ../$pkgbase-fix-python3.14-macro-redefinition.patch
   # add version, so that utils/gen-version.sh may rely on it
   printf "%s\n" "$pkgver" > .tarball-version
 }
 
 build() {
-  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=enabled -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled
+  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=enabled -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled -Drpi-awb-nn=disabled
   meson compile -C build
   #ninja -C build install
 }
@@ -96,11 +101,14 @@ package_libcamera-rpi() {
   depends=(
     gcc-libs
     glibc
+    libglvnd
+    libstdc++
     gnutls
     libcamera-ipa-rpi
     libelf
     libunwind
     libyaml
+    libyuv
     sh
     systemd-libs libudev.so
   )
@@ -138,6 +146,7 @@ package_libcamera-docs-rpi() {
   mv -v ${pkgname%"-rpi"}/* "$pkgdir"
   mv -v "$pkgdir/usr/share/doc/$pkgbase-$pkgver/" "$pkgdir/usr/share/doc/$pkgbase/"
   rm -frv "$pkgdir/usr/share/doc/$pkgbase/html/.buildinfo"
+  rm -vr "$pkgdir/usr/share/doc/$pkgbase/html/.doctrees"
 }
 
 package_libcamera-ipa-rpi() {
@@ -152,6 +161,7 @@ package_libcamera-ipa-rpi() {
   depends=(
     gcc-libs
     glibc
+    libstdc++
     libcamera-rpi libcamera.so libcamera-base.so
   )
   # stripping requires re-signing of IPA libs, so we do it manually
@@ -183,6 +193,7 @@ package_libcamera-tools-rpi() {
     libdrm
     libevent libevent-2.1.so libevent_pthreads-2.1.so
     libjpeg-turbo libjpeg.so
+    libstdc++
     libtiff libtiff.so
     libyaml
     qt6-base
@@ -207,6 +218,7 @@ package_gst-plugin-libcamera-rpi() {
     glibc
     glib2 libg{lib,object}-2.0.so
     gstreamer
+    libstdc++
     gst-plugins-base-libs
     libcamera-rpi libcamera.so libcamera-base.so
   )
@@ -224,7 +236,8 @@ package_python-libcamera-rpi() {
   depends=(
     gcc-libs
     glibc
-    libcamera
+    libstdc++
+    libcamera-rpi
     python
   )
 
