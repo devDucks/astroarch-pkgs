@@ -1,0 +1,122 @@
+name: Build changed packages (x86_64)
+
+on:
+  push:
+    paths:
+      - 'packages/**'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package name to build (leave blank to detect from last commit)'
+        required: false
+        default: ''
+
+jobs:
+  # ── Job 1: detect which packages changed ─────────────────────────────────
+  detect:
+    name: Detect changed packages
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    outputs:
+      pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
+      has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
+      has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install git
+        run: pacman -Sy --noconfirm --noprogressbar git
+
+      - name: Detect and classify changed packages
+        id: classify
+        run: bash ci/detect-changes.sh "${{ inputs.package }}"
+
+  # ── Job 2: build cmake-python-distributions first (if changed) ───────────
+  build-cmake-python-distributions:
+    name: Build cmake-python-distributions
+    needs: detect
+    if: needs.detect.outputs.has_cmake_dep == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build cmake-python-distributions
+        run: bash ci/build-package.sh cmake-python-distributions
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-cmake-python-distributions
+          path: packages/cmake-python-distributions/*.pkg.tar.zst
+          retention-days: 14
+
+  # ── Job 3: build simplejpeg after cmake-python-distributions ─────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only simplejpeg changed (job 2 was skipped).
+  build-simplejpeg:
+    name: Build simplejpeg
+    needs:
+      - detect
+      - build-cmake-python-distributions
+    if: needs.detect.outputs.has_needs_cmake == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Present only when cmake-python-distributions was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download cmake-python-distributions artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-cmake-python-distributions
+          path: /tmp/local-pkgs/
+
+      - name: Build simplejpeg
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh simplejpeg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-simplejpeg
+          path: packages/simplejpeg/*.pkg.tar.zst
+          retention-days: 14
+
+  # ── Job 4: matrix build for all other packages ───────────────────────────
+  build-package:
+    name: "Build ${{ matrix.package }}"
+    needs: detect
+    if: needs.detect.outputs.pkgs_no_dep != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.detect.outputs.pkgs_no_dep) }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    # kstars/kstars-git can take ~60 min; 90 is a safe ceiling
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.package }}
+        run: bash ci/build-package.sh "${{ matrix.package }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "pkg-${{ matrix.package }}"
+          path: "packages/${{ matrix.package }}/*.pkg.tar.zst"
+          if-no-files-found: error
+          retention-days: 14

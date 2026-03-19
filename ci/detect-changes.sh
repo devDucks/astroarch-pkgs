@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# ci/detect-changes.sh
+#
+# Detects which packages changed since the last commit and classifies them
+# for the CI build order. Emits GitHub Actions outputs to $GITHUB_OUTPUT.
+#
+# Usage: detect-changes.sh [package-name-override]
+#   package-name-override: if provided, skip git diff and build only this package.
+
+set -euo pipefail
+
+# ── Packages that are aarch64-only — skip on x86_64 CI ───────────────────────
+AARCH64_ONLY=(
+  astroarch-onboarding
+  astrolink4pi
+  ekosdebugger
+  fire_capture
+  lgpio
+  libcamera
+  libpisp
+  python-av
+  rpicam-apps
+  rustdesk-bin
+)
+
+# ── cmake-python-distributions must be built before simplejpeg ───────────────
+CMAKE_DEP_DIR="cmake-python-distributions"
+NEEDS_CMAKE_DIRS=(simplejpeg)
+
+is_aarch64_only() {
+  local pkg="$1"
+  for skip in "${AARCH64_ONLY[@]}"; do
+    [[ "$skip" == "$pkg" ]] && return 0
+  done
+  return 1
+}
+
+is_needs_cmake() {
+  local pkg="$1"
+  for dep in "${NEEDS_CMAKE_DIRS[@]}"; do
+    [[ "$dep" == "$pkg" ]] && return 0
+  done
+  return 1
+}
+
+to_json_array() {
+  # Converts bash array arguments to a JSON array string, e.g. ["a","b","c"]
+  local arr=("$@")
+  if [[ ${#arr[@]} -eq 0 ]]; then
+    echo "[]"
+    return
+  fi
+  local json="["
+  for i in "${!arr[@]}"; do
+    [[ $i -gt 0 ]] && json+=","
+    json+="\"${arr[$i]}\""
+  done
+  json+="]"
+  echo "$json"
+}
+
+# ── Determine list of packages to consider ───────────────────────────────────
+OVERRIDE="${1:-}"
+CHANGED_PKGS=()
+
+if [[ -n "$OVERRIDE" ]]; then
+  CHANGED_PKGS=("$OVERRIDE")
+else
+  mapfile -t CHANGED_FILES < <(git diff --name-only HEAD~1 HEAD)
+  declare -A seen
+  for f in "${CHANGED_FILES[@]}"; do
+    if [[ "$f" =~ ^packages/([^/]+)/ ]]; then
+      pkg="${BASH_REMATCH[1]}"
+      if [[ -z "${seen[$pkg]+x}" ]]; then
+        seen["$pkg"]=1
+        CHANGED_PKGS+=("$pkg")
+      fi
+    fi
+  done
+fi
+
+if [[ ${#CHANGED_PKGS[@]} -eq 0 ]]; then
+  echo "No changed packages detected." >&2
+fi
+
+# ── Classify packages into buckets ───────────────────────────────────────────
+pkgs_no_dep=()
+has_cmake_dep=false
+has_needs_cmake=false
+
+for pkg in "${CHANGED_PKGS[@]}"; do
+  if is_aarch64_only "$pkg"; then
+    echo "Skipping aarch64-only package: $pkg" >&2
+    continue
+  fi
+
+  if [[ "$pkg" == "$CMAKE_DEP_DIR" ]]; then
+    has_cmake_dep=true
+  elif is_needs_cmake "$pkg"; then
+    has_needs_cmake=true
+  else
+    # Verify the package directory actually exists before adding it
+    if [[ -f "packages/$pkg/PKGBUILD" ]]; then
+      pkgs_no_dep+=("$pkg")
+    else
+      echo "WARNING: packages/$pkg/PKGBUILD not found, skipping" >&2
+    fi
+  fi
+done
+
+PKG_NO_DEP_JSON=$(to_json_array "${pkgs_no_dep[@]+"${pkgs_no_dep[@]}"}")
+
+# ── Debug summary ─────────────────────────────────────────────────────────────
+echo "=== CI package classification (x86_64) ==="
+echo "  Regular packages (matrix):        ${PKG_NO_DEP_JSON}"
+echo "  cmake-python-distributions:       ${has_cmake_dep}"
+echo "  simplejpeg (needs cmake first):   ${has_needs_cmake}"
+
+# ── Emit outputs ──────────────────────────────────────────────────────────────
+{
+  echo "pkgs_no_dep=${PKG_NO_DEP_JSON}"
+  echo "has_cmake_dep=${has_cmake_dep}"
+  echo "has_needs_cmake=${has_needs_cmake}"
+} >> "$GITHUB_OUTPUT"
