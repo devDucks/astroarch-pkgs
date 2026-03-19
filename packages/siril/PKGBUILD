@@ -1,7 +1,6 @@
 pkgname=siril
 pkgver=1.4.2
 pkgrel=1
-beta="-beta4"
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
 arch=('aarch64' 'x86_64')
 license=('GPL3')

@@ -23,8 +23,6 @@ prepare() {
   cd build
   cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DUSE_SYSTEM_LIBINDI=ON \
-        -DCMAKE_C_COMPILER_LAUNCHER=distcc \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=distcc \
         -DUSE_SYSTEM_LIBUSB=ON \
         -DUSE_SYSTEM_GTEST=ON \
         -DEIGEN_SRC=/usr/include/eigen3 \
