@@ -8,12 +8,12 @@ url=https://github.com/MattBlack85/astro_monitor
 license=(MIT)
 depends=(gcc-libs)
 makedepends=(rustup)
-source=(https://github.com/MattBlack85/astro_monitor/archive/refs/tags/v${pkgver}-rc1.tar.gz)
-sha256sums=(aaaa17a795109c573fe5f3a11352475cabb2a0a790c0ee5864263929abdbac98)
+source=(https://github.com/MattBlack85/astro_monitor/archive/refs/tags/v${pkgver}-rc2.tar.gz)
+sha256sums=(f6c55f1919df7780d30975d8ac68ea6c6d08a2fe574b25246e99287ef5383726)
 _folder=${srcdir}/astro_monitor-${pkgver}
 
 build() {
-    cd ${srcdir}/astro_monitor-${pkgver}-rc1
+    cd ${srcdir}/astro_monitor-${pkgver}-rc2
     # ring 0.16.x is incompatible with rust-lld; force GNU BFD linker
     RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd" cargo build --release
 }
@@ -21,5 +21,5 @@ build() {
 package() {
     mkdir -p ${pkgdir}/usr/bin/
     
-    mv ${srcdir}/astro_monitor-${pkgver}-rc1/target/release/astromonitor ${pkgdir}/usr/bin
+    mv ${srcdir}/astro_monitor-${pkgver}-rc2/target/release/astromonitor ${pkgdir}/usr/bin
 }
