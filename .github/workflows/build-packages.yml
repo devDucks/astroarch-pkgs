@@ -23,12 +23,12 @@ jobs:
       has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
       has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm --noprogressbar git
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
-      - name: Install git
-        run: pacman -Sy --noconfirm --noprogressbar git
 
       - name: Detect and classify changed packages
         id: classify
