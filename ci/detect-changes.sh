@@ -66,17 +66,40 @@ CHANGED_PKGS=()
 if [[ -n "$OVERRIDE" ]]; then
   CHANGED_PKGS=("$OVERRIDE")
 else
-  mapfile -t CHANGED_FILES < <(git diff --name-only HEAD~1 HEAD)
-  declare -A seen
-  for f in "${CHANGED_FILES[@]}"; do
-    if [[ "$f" =~ ^packages/([^/]+)/ ]]; then
-      pkg="${BASH_REMATCH[1]}"
-      if [[ -z "${seen[$pkg]+x}" ]]; then
-        seen["$pkg"]=1
-        CHANGED_PKGS+=("$pkg")
-      fi
+    # Determine base commit for the diff.
+    # 1. Use BEFORE_SHA (from github.event.before on push events) if it's a real SHA and was fetched.
+    # 2. Fall back to HEAD~1 if it exists (fetch-depth: 2 covers the common case).
+    # 3. If neither is available (e.g. initial push to a brand-new branch), emit no packages.
+    BASE_REF=""
+    if [[ -n "${BEFORE_SHA:-}" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+        if git cat-file -e "${BEFORE_SHA}" 2>/dev/null; then
+            BASE_REF="$BEFORE_SHA"
+	else
+            echo "BEFORE_SHA ($BEFORE_SHA) not in local history (shallow clone?), trying HEAD~1" >&2
+        fi
     fi
-  done
+    if [[ -z "$BASE_REF" ]]; then
+        if git rev-parse --verify HEAD~1 &>/dev/null; then
+            BASE_REF="HEAD~1"
+        else
+            echo "HEAD~1 not accessible and no usable BEFORE_SHA — cannot detect changes." >&2
+            echo "Tip: re-run with an explicit package name via workflow_dispatch." >&2
+        fi
+    fi
+    CHANGED_FILES=()
+    if [[ -n "$BASE_REF" ]]; then
+	mapfile -t CHANGED_FILES < <(git diff --name-only "$BASE_REF" HEAD)
+    fi
+    declare -A seen
+    for f in "${CHANGED_FILES[@]}"; do
+	if [[ "$f" =~ ^packages/([^/]+)/ ]]; then
+	    pkg="${BASH_REMATCH[1]}"
+	    if [[ -z "${seen[$pkg]+x}" ]]; then
+		seen["$pkg"]=1
+		CHANGED_PKGS+=("$pkg")
+	    fi
+	fi
+    done
 fi
 
 if [[ ${#CHANGED_PKGS[@]} -eq 0 ]]; then

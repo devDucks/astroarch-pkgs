@@ -32,6 +32,8 @@ jobs:
 
       - name: Detect and classify changed packages
         id: classify
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: bash ci/detect-changes.sh "${{ inputs.package }}"
 
   # ── Job 2: build cmake-python-distributions first (if changed) ───────────
