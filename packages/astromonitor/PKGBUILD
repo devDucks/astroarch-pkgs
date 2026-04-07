@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astromonitor
-pkgver=1.1.0
+pkgver=2.0.0
 pkgrel=1
 pkgdesc="Small utility to help you in your astrophotography journey"
 arch=(x86_64 aarch64)
@@ -8,17 +8,17 @@ url=https://github.com/MattBlack85/astro_monitor
 license=(MIT)
 depends=(gcc-libs)
 makedepends=(rustup)
-source=(https://github.com/MattBlack85/astro_monitor/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=(1fd40cb37d72295afe6a397cdac9870130df8d8965b924279134049c7e222237)
+source=(https://github.com/MattBlack85/astro_monitor/archive/refs/tags/v${pkgver}-rc1.tar.gz)
+sha256sums=(aaaa17a795109c573fe5f3a11352475cabb2a0a790c0ee5864263929abdbac98)
 _folder=${srcdir}/astro_monitor-${pkgver}
 
 build() {
-    cd ${srcdir}/astro_monitor-${pkgver}
+    cd ${srcdir}/astro_monitor-${pkgver}-rc1
     cargo build --release
 }
 
 package() {
     mkdir -p ${pkgdir}/usr/bin/
     
-    mv ${srcdir}/astro_monitor-${pkgver}/target/release/astromonitor ${pkgdir}/usr/bin
+    mv ${srcdir}/astro_monitor-${pkgver}-rc1/target/release/astromonitor ${pkgdir}/usr/bin
 }
