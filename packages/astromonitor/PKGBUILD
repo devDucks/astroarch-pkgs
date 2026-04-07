@@ -14,7 +14,8 @@ _folder=${srcdir}/astro_monitor-${pkgver}
 
 build() {
     cd ${srcdir}/astro_monitor-${pkgver}-rc1
-    cargo build --release
+    # ring 0.16.x is incompatible with rust-lld; force GNU BFD linker
+    RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd" cargo build --release
 }
 
 package() {
