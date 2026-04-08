@@ -6,7 +6,8 @@ pkgdesc='Indi core library'
 arch=(x86_64 aarch64)
 url='https://github.com/indilib/indi'
 license=(LGPLv2)
-depends=(curl
+depends=(cfitsio
+         curl
          fftw
          gpsd
          gsl
