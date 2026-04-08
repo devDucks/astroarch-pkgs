@@ -28,4 +28,4 @@ jobs:
       - name: Push to Hetzner
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
-            ./packages/ ${{ secrets.HETZNER_HOST }}:/var/www/astromatto-repo/x86_64
+            ./packages/ ${{ secrets.HETZNER_HOST }}:astromatto-repo/x86_64
