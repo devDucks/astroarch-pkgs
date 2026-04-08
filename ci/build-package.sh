@@ -73,6 +73,9 @@ if grep -q 'makedepends.*rustup\|rustup.*makedepends' "${PKG_DIR}/PKGBUILD" 2>/d
   su - builder -c "rustup default stable"
 fi
 
+# ── Add astromatto repo to pull already compiled packages ─────────────────────
+sed -i 's|\[core\]|\[astromatto\]\nSigLevel = Optional TrustAll\nServer = http://astroarch.astromatto.com:9000/$arch\n\n\[core\]|' /etc/pacman.conf
+
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "==> Building package: ${PKGNAME}"
 su - builder -c "
