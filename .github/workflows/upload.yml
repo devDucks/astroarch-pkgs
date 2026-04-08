@@ -1,6 +1,10 @@
 name: Publish Release
 on:
   workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the build workflow to upload from'
+        required: true
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -11,6 +15,8 @@ jobs:
           pattern: pkg-*
           path: ./packages
           merge-multiple: true
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up SSH key
         run: |
