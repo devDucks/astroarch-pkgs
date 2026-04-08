@@ -75,6 +75,7 @@ fi
 
 # ── Add astromatto repo to pull already compiled packages ─────────────────────
 sed -i 's|\[core\]|\[astromatto\]\nSigLevel = Optional TrustAll\nServer = http://astroarch.astromatto.com:9000/$arch\n\n\[core\]|' /etc/pacman.conf
+pacman -Sy
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "==> Building package: ${PKGNAME}"
