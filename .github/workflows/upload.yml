@@ -1,0 +1,25 @@
+name: Publish Release
+on:
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: *.tar.zst
+          path: ./packages
+          merge-multiple: true
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H $(echo "${{ secrets.HETZNER_HOST }}" | cut -d@ -f2) >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Push to Hetzner
+        run: |
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_deploy" \
+            ./packages/ ${{ secrets.HETZNER_HOST }}:/var/www/astromatto-repo/x86_64
