@@ -21,7 +21,7 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_deploy
+          echo "${{ secrets.HETZNER_SSH }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -H $(echo "${{ secrets.HETZNER_HOST }}" | cut -d@ -f2) >> ~/.ssh/known_hosts 2>/dev/null || true
 
