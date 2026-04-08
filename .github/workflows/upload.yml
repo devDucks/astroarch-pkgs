@@ -8,7 +8,7 @@ jobs:
       - name: Download all package artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: *.tar.zst
+          pattern: pkg-*
           path: ./packages
           merge-multiple: true
 
