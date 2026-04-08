@@ -12,6 +12,7 @@ depends=(dfu-util
          indi-3rdparty-libs
          libdc1394
          limesuite
+         pipewire-jack
          urjtag
          zeromq)
 depends_aarch64=(dfu-util
@@ -21,6 +22,7 @@ depends_aarch64=(dfu-util
                  libdc1394
                  limesuite
                  pigpio
+                 pipewire-jack
                  urjtag
                  zeromq)
 makedepends=(cmake)
