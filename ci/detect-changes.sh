@@ -61,6 +61,22 @@ CHANGED_PKGS=()
 
 if [[ -n "$OVERRIDE" ]]; then
   CHANGED_PKGS=("$OVERRIDE")
+  # Cascade upstream deps for mid-chain packages so the full chain is built
+  # and all packages are uploaded atomically to the repo.
+  case "$OVERRIDE" in
+    indi-3rdparty-drivers)
+      CHANGED_PKGS+=(indi-3rdparty-libs libindi) ;;
+    indi-3rdparty-libs)
+      CHANGED_PKGS+=(libindi) ;;
+    indi-3rdparty-drivers-git)
+      CHANGED_PKGS+=(indi-3rdparty-libs-git libindi-git) ;;
+    indi-3rdparty-libs-git)
+      CHANGED_PKGS+=(libindi-git) ;;
+    kstars)
+      CHANGED_PKGS+=(libindi stellarsolver) ;;
+    kstars-git)
+      CHANGED_PKGS+=(libindi-git stellarsolver) ;;
+  esac
 else
     # Determine base commit for the diff.
     # 1. Use BEFORE_SHA (from github.event.before on push events) if it's a real SHA and was fetched.
