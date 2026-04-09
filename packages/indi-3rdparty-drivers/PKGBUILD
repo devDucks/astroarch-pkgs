@@ -41,8 +41,6 @@ build() {
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	-DSKIP_SETCAP=yes \
-	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-	-DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
 	../indi-3rdparty-$pkgver
   make
 }
@@ -51,10 +49,8 @@ package() {
   cd build
   make DESTDIR="$pkgdir" install
   mkdir -p "$pkgdir"/usr/lib/firmware
-  mv "$pkgdir"/lib/firmware/* "$pkgdir"/usr/lib/firmware
   mv "$pkgdir"/lib/udev/rules.d/* "$pkgdir"/usr/lib/udev/rules.d
   rmdir "$pkgdir/lib/udev/rules.d"
   rmdir "$pkgdir/lib/udev"
-  rmdir "$pkgdir/lib/firmware"
   rmdir "$pkgdir/lib"
 }
