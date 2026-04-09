@@ -9,6 +9,10 @@ on:
         description: 'Target architecture (x86_64 or aarch64)'
         required: false
         default: 'x86_64'
+      packages:
+        description: 'Space-separated package names to upload (leave blank to upload all artifacts)'
+        required: false
+        default: ''
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -17,10 +21,26 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: pkg-*
-          path: ./packages
-          merge-multiple: true
+          path: ./artifacts
           run-id: ${{ inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Collect packages to upload
+        run: |
+          mkdir -p ./packages
+          if [ -z "${{ inputs.packages }}" ]; then
+            find ./artifacts -name '*.pkg.tar.zst' -exec cp {} ./packages/ \;
+          else
+            for pkg in ${{ inputs.packages }}; do
+              if [ -d "./artifacts/pkg-${pkg}" ]; then
+                cp ./artifacts/pkg-${pkg}/*.pkg.tar.zst ./packages/
+              else
+                echo "WARNING: no artifact found for package '${pkg}'"
+              fi
+            done
+          fi
+          echo "Packages to upload:"
+          ls ./packages/
 
       - name: Set up SSH key
         run: |
