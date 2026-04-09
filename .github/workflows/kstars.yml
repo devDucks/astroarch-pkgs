@@ -14,9 +14,18 @@ on:
         description: 'Package to build (kstars, kstars-git, stellarsolver, libindi, libindi-git; leave blank to auto-detect)'
         required: false
         default: ''
+      arch:
+        description: 'Architecture to build'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - x86_64
+          - aarch64
 
 jobs:
-  # ── Detect which packages changed ────────────────────────────────────────────
+  # ── Detect which packages changed + compute arch matrix ──────────────────────
   detect:
     name: Detect changed packages
     runs-on: ubuntu-latest
@@ -30,6 +39,7 @@ jobs:
       has_kstars_git:         ${{ steps.classify.outputs.has_kstars_git }}
       has_kstars_libindi:     ${{ steps.classify.outputs.has_kstars_libindi }}
       has_kstars_git_libindi: ${{ steps.classify.outputs.has_kstars_git_libindi }}
+      arch_matrix:            ${{ steps.set-matrix.outputs.arch_matrix }}
     steps:
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
@@ -44,6 +54,17 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
         run: bash ci/detect-changes.sh "${{ inputs.package }}"
 
+      - name: Set arch matrix
+        id: set-matrix
+        run: |
+          x86='{"arch":"x86_64","runner":"\"ubuntu-latest\"","image":"archlinux:latest","pkg_glob":"*.pkg.tar.zst"}'
+          arm='{"arch":"aarch64","runner":"[\"self-hosted\",\"self-hosted-aarch64\"]","image":"ghcr.io/devducks/archlinuxarm:latest","pkg_glob":"*.pkg.tar.xz"}'
+          case "${{ inputs.arch }}" in
+            x86_64)  echo "arch_matrix={\"include\":[$x86]}" >> "$GITHUB_OUTPUT" ;;
+            aarch64) echo "arch_matrix={\"include\":[$arm]}" >> "$GITHUB_OUTPUT" ;;
+            *)       echo "arch_matrix={\"include\":[$x86,$arm]}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
   # ── libindi (stable) ─────────────────────────────────────────────────────────
   build-libindi:
     name: "Build libindi [${{ matrix.arch }}]"
@@ -51,16 +72,7 @@ jobs:
     if: needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_kstars_libindi == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: '"ubuntu-latest"'
-            image: archlinux:latest
-            pkg_glob: "*.pkg.tar.zst"
-          - arch: aarch64
-            runner: '["self-hosted","self-hosted-aarch64"]'
-            image: ghcr.io/devducks/archlinuxarm:latest
-            pkg_glob: "*.pkg.tar.xz"
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
@@ -90,16 +102,7 @@ jobs:
     if: needs.detect.outputs.has_stellarsolver == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: '"ubuntu-latest"'
-            image: archlinux:latest
-            pkg_glob: "*.pkg.tar.zst"
-          - arch: aarch64
-            runner: '["self-hosted","self-hosted-aarch64"]'
-            image: ghcr.io/devducks/archlinuxarm:latest
-            pkg_glob: "*.pkg.tar.xz"
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
@@ -133,16 +136,7 @@ jobs:
       (needs.build-stellarsolver.result == 'success' || needs.build-stellarsolver.result == 'skipped')
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: '"ubuntu-latest"'
-            image: archlinux:latest
-            pkg_glob: "*.pkg.tar.zst"
-          - arch: aarch64
-            runner: '["self-hosted","self-hosted-aarch64"]'
-            image: ghcr.io/devducks/archlinuxarm:latest
-            pkg_glob: "*.pkg.tar.xz"
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
@@ -188,16 +182,7 @@ jobs:
     if: needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_kstars_git_libindi == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: '"ubuntu-latest"'
-            image: archlinux:latest
-            pkg_glob: "*.pkg.tar.zst"
-          - arch: aarch64
-            runner: '["self-hosted","self-hosted-aarch64"]'
-            image: ghcr.io/devducks/archlinuxarm:latest
-            pkg_glob: "*.pkg.tar.xz"
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
@@ -231,16 +216,7 @@ jobs:
       (needs.build-stellarsolver.result == 'success' || needs.build-stellarsolver.result == 'skipped')
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: '"ubuntu-latest"'
-            image: archlinux:latest
-            pkg_glob: "*.pkg.tar.zst"
-          - arch: aarch64
-            runner: '["self-hosted","self-hosted-aarch64"]'
-            image: ghcr.io/devducks/archlinuxarm:latest
-            pkg_glob: "*.pkg.tar.xz"
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
