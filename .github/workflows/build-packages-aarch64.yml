@@ -16,6 +16,8 @@ jobs:
   detect:
     name: Detect changed packages
     runs-on: [self-hosted, self-hosted-aarch64]
+    container:
+      image: ghcr.io/devducks/archlinuxarm-basic:latest
     outputs:
       pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
       has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
