@@ -1,0 +1,343 @@
+name: Build INDI chain
+
+on:
+  push:
+    paths:
+      - 'packages/libindi/**'
+      - 'packages/libindi-git/**'
+      - 'packages/indi-3rdparty-libs/**'
+      - 'packages/indi-3rdparty-drivers/**'
+      - 'packages/indi-3rdparty-libs-git/**'
+      - 'packages/indi-3rdparty-drivers-git/**'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to build (libindi, indi-3rdparty-libs, indi-3rdparty-drivers, or git variants; leave blank to auto-detect)'
+        required: false
+        default: ''
+
+jobs:
+  # ── Detect which packages changed ────────────────────────────────────────────
+  detect:
+    name: Detect changed packages
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    outputs:
+      has_libindi:              ${{ steps.classify.outputs.has_libindi }}
+      has_3rdparty_libs:        ${{ steps.classify.outputs.has_3rdparty_libs }}
+      has_3rdparty_drivers:     ${{ steps.classify.outputs.has_3rdparty_drivers }}
+      has_libindi_git:          ${{ steps.classify.outputs.has_libindi_git }}
+      has_3rdparty_libs_git:    ${{ steps.classify.outputs.has_3rdparty_libs_git }}
+      has_3rdparty_drivers_git: ${{ steps.classify.outputs.has_3rdparty_drivers_git }}
+    steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm --noprogressbar git
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect and classify changed packages
+        id: classify
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: bash ci/detect-changes.sh "${{ inputs.package }}"
+
+  # ── libindi (stable) ─────────────────────────────────────────────────────────
+  build-libindi:
+    name: "Build libindi [${{ matrix.arch }}]"
+    needs: detect
+    if: needs.detect.outputs.has_libindi == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 30
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build libindi
+        run: bash ci/build-package.sh libindi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libindi-${{ matrix.arch }}
+          path: packages/libindi/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-libs (stable): libindi → indi-3rdparty-libs ────────────────
+  build-indi-3rdparty-libs:
+    name: "Build indi-3rdparty-libs [${{ matrix.arch }}]"
+    needs: [detect, build-libindi]
+    if: |
+      always() &&
+      (needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_3rdparty_libs == 'true') &&
+      (needs.build-libindi.result == 'success' || needs.build-libindi.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-libs
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-libs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-libs-${{ matrix.arch }}
+          path: packages/indi-3rdparty-libs/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-drivers (stable): → indi-3rdparty-drivers ──────────────────
+  build-indi-3rdparty-drivers:
+    name: "Build indi-3rdparty-drivers [${{ matrix.arch }}]"
+    needs: [detect, build-libindi, build-indi-3rdparty-libs]
+    if: |
+      always() &&
+      (needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_3rdparty_libs == 'true' || needs.detect.outputs.has_3rdparty_drivers == 'true') &&
+      (needs.build-libindi.result == 'success' || needs.build-libindi.result == 'skipped') &&
+      (needs.build-indi-3rdparty-libs.result == 'success' || needs.build-indi-3rdparty-libs.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download indi-3rdparty-libs artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-indi-3rdparty-libs-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-drivers
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-drivers
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-drivers-${{ matrix.arch }}
+          path: packages/indi-3rdparty-drivers/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── libindi-git ───────────────────────────────────────────────────────────────
+  build-libindi-git:
+    name: "Build libindi-git [${{ matrix.arch }}]"
+    needs: detect
+    if: needs.detect.outputs.has_libindi_git == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 30
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build libindi-git
+        run: bash ci/build-package.sh libindi-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: packages/libindi-git/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-libs-git ────────────────────────────────────────────────────
+  build-indi-3rdparty-libs-git:
+    name: "Build indi-3rdparty-libs-git [${{ matrix.arch }}]"
+    needs: [detect, build-libindi-git]
+    if: |
+      always() &&
+      (needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_3rdparty_libs_git == 'true') &&
+      (needs.build-libindi-git.result == 'success' || needs.build-libindi-git.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi-git artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-libs-git
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-libs-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-libs-git-${{ matrix.arch }}
+          path: packages/indi-3rdparty-libs-git/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-drivers-git ─────────────────────────────────────────────────
+  build-indi-3rdparty-drivers-git:
+    name: "Build indi-3rdparty-drivers-git [${{ matrix.arch }}]"
+    needs: [detect, build-libindi-git, build-indi-3rdparty-libs-git]
+    if: |
+      always() &&
+      (needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_3rdparty_libs_git == 'true' || needs.detect.outputs.has_3rdparty_drivers_git == 'true') &&
+      (needs.build-libindi-git.result == 'success' || needs.build-libindi-git.result == 'skipped') &&
+      (needs.build-indi-3rdparty-libs-git.result == 'success' || needs.build-indi-3rdparty-libs-git.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: '"ubuntu-latest"'
+            image: archlinux:latest
+            pkg_glob: "*.pkg.tar.zst"
+          - arch: aarch64
+            runner: '["self-hosted","self-hosted-aarch64"]'
+            image: ghcr.io/devducks/archlinuxarm:latest
+            pkg_glob: "*.pkg.tar.xz"
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi-git artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download indi-3rdparty-libs-git artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-indi-3rdparty-libs-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-drivers-git
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-drivers-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-drivers-git-${{ matrix.arch }}
+          path: packages/indi-3rdparty-drivers-git/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14

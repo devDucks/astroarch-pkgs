@@ -28,14 +28,25 @@ jobs:
       - name: Collect packages to upload
         run: |
           mkdir -p ./packages
+          arch="${{ inputs.arch }}"
           if [ -z "${{ inputs.packages }}" ]; then
-            find ./artifacts -name '*.pkg.tar.zst' -exec cp {} ./packages/ \;
+            # Upload all: prefer arch-suffixed artifacts (kstars/indi workflows),
+            # fall back to plain artifacts (build-packages workflow).
+            # Copy arch-specific ones first, then plain ones (without overwriting).
+            find ./artifacts -path "*-${arch}/*.pkg.tar.*" -exec cp -n {} ./packages/ \;
+            find ./artifacts -name '*.pkg.tar.*' \
+              ! -path "*-x86_64/*" ! -path "*-aarch64/*" \
+              -exec cp -n {} ./packages/ \;
           else
             for pkg in ${{ inputs.packages }}; do
-              if [ -d "./artifacts/pkg-${pkg}" ]; then
-                cp ./artifacts/pkg-${pkg}/*.pkg.tar.zst ./packages/
+              # Try arch-specific artifact first (kstars.yml / indi.yml)
+              if [ -d "./artifacts/pkg-${pkg}-${arch}" ]; then
+                cp "./artifacts/pkg-${pkg}-${arch}"/*.pkg.tar.* ./packages/
+              # Fall back to plain artifact (build-packages.yml)
+              elif [ -d "./artifacts/pkg-${pkg}" ]; then
+                cp "./artifacts/pkg-${pkg}"/*.pkg.tar.* ./packages/
               else
-                echo "WARNING: no artifact found for package '${pkg}'"
+                echo "WARNING: no artifact found for package '${pkg}' (tried pkg-${pkg}-${arch} and pkg-${pkg})"
               fi
             done
           fi
