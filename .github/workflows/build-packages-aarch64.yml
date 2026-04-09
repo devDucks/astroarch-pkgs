@@ -31,6 +31,8 @@ jobs:
       has_stellarsolver:    ${{ steps.classify.outputs.has_stellarsolver }}
       has_kstars:           ${{ steps.classify.outputs.has_kstars }}
       has_kstars_git:       ${{ steps.classify.outputs.has_kstars_git }}
+      has_kstars_libindi:      ${{ steps.classify.outputs.has_kstars_libindi }}
+      has_kstars_git_libindi:  ${{ steps.classify.outputs.has_kstars_git_libindi }}
     steps:
       - name: bootstrap
         run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
@@ -144,7 +146,7 @@ jobs:
   build-libindi:
     name: Build libindi
     needs: detect
-    if: needs.detect.outputs.has_libindi == 'true'
+    if: needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_kstars_libindi == 'true'
     runs-on: [self-hosted, self-hosted-aarch64]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest
@@ -240,7 +242,7 @@ jobs:
   build-libindi-git:
     name: Build libindi-git
     needs: detect
-    if: needs.detect.outputs.has_libindi_git == 'true'
+    if: needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_kstars_git_libindi == 'true'
     runs-on: [self-hosted, self-hosted-aarch64]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest

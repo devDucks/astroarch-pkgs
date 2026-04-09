@@ -73,9 +73,11 @@ if [[ -n "$OVERRIDE" ]]; then
     indi-3rdparty-libs-git)
       CHANGED_PKGS+=(libindi-git) ;;
     kstars)
-      CHANGED_PKGS+=(libindi stellarsolver) ;;
+      CHANGED_PKGS+=(stellarsolver)
+      has_kstars_libindi=true ;;
     kstars-git)
-      CHANGED_PKGS+=(libindi-git stellarsolver) ;;
+      CHANGED_PKGS+=(stellarsolver)
+      has_kstars_git_libindi=true ;;
   esac
 else
     # Determine base commit for the diff.
@@ -131,6 +133,8 @@ has_3rdparty_drivers_git=false
 has_stellarsolver=false
 has_kstars=false
 has_kstars_git=false
+has_kstars_libindi=false
+has_kstars_git_libindi=false
 
 for pkg in "${CHANGED_PKGS[@]}"; do
   if is_aarch64_only "$pkg"; then
@@ -176,6 +180,8 @@ echo "  indi-3rdparty-drivers-git:        ${has_3rdparty_drivers_git}"
 echo "  stellarsolver:                    ${has_stellarsolver}"
 echo "  kstars:                           ${has_kstars}"
 echo "  kstars-git:                       ${has_kstars_git}"
+echo "  kstars_libindi (prereq only):     ${has_kstars_libindi}"
+echo "  kstars_git_libindi (prereq only): ${has_kstars_git_libindi}"
 
 # ── Emit outputs ──────────────────────────────────────────────────────────────
 {
@@ -191,4 +197,6 @@ echo "  kstars-git:                       ${has_kstars_git}"
   echo "has_stellarsolver=${has_stellarsolver}"
   echo "has_kstars=${has_kstars}"
   echo "has_kstars_git=${has_kstars_git}"
+  echo "has_kstars_libindi=${has_kstars_libindi}"
+  echo "has_kstars_git_libindi=${has_kstars_git_libindi}"
 } >> "$GITHUB_OUTPUT"
