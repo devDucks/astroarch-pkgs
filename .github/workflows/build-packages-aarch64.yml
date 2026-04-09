@@ -24,7 +24,7 @@ jobs:
       has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
     steps:
       - name: bootstrap
-        run: pacman-key --init && pacman-key --populate archlinuxarm
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
 
