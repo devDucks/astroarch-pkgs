@@ -8,9 +8,10 @@
 # Usage: build-package.sh <package-name>
 #
 # Environment variables:
-#   LOCAL_PKG_DIR  Optional path to a directory containing .pkg.tar.zst files
-#                  to install via pacman -U before running makepkg. Used for
-#                  building simplejpeg after a freshly-built cmake-python-distributions.
+#   LOCAL_PKG_DIR  Optional path to a directory containing .pkg.tar.zst or
+#                  .pkg.tar.xz files to install via pacman -U before running
+#                  makepkg. Used for chained builds (e.g. libindi before
+#                  indi-3rdparty-libs, or cmake-python-distributions before simplejpeg).
 
 set -euo pipefail
 
@@ -42,7 +43,7 @@ pacman -S --noconfirm --noprogressbar --needed \
 # Used when simplejpeg is built right after cmake-python-distributions.
 if [[ -n "$LOCAL_PKG_DIR" && -d "$LOCAL_PKG_DIR" ]]; then
   shopt -s nullglob
-  local_pkgs=("${LOCAL_PKG_DIR}"/*.pkg.tar.zst)
+  local_pkgs=("${LOCAL_PKG_DIR}"/*.pkg.tar.zst "${LOCAL_PKG_DIR}"/*.pkg.tar.xz)
   shopt -u nullglob
   if [[ ${#local_pkgs[@]} -gt 0 ]]; then
     echo "==> Installing local prerequisite packages from ${LOCAL_PKG_DIR}"
@@ -87,8 +88,9 @@ su - builder -c "
 
 # ── Collect artifacts ─────────────────────────────────────────────────────────
 echo "==> Copying built packages back to workspace"
-find /home/builder/pkgbuild -maxdepth 1 -name '*.pkg.tar.zst' \
+find /home/builder/pkgbuild -maxdepth 1 \
+  \( -name '*.pkg.tar.zst' -o -name '*.pkg.tar.xz' \) \
   -exec cp {} "${PKG_DIR}/" \;
 
 echo "==> Built artifacts:"
-ls -lh "${PKG_DIR}"/*.pkg.tar.zst
+ls -lh "${PKG_DIR}"/*.pkg.tar.*

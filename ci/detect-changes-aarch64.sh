@@ -16,20 +16,16 @@ X86_64_ONLY=(
 
 # ── cmake-python-distributions must be built before simplejpeg ───────────────
 CMAKE_DEP_DIR="cmake-python-distributions"
-NEEDS_CMAKE_DIRS=(simplejpeg)
+
+# ── INDI and KStars dependency chains (built sequentially, uploaded together) ─
+# Stable:  libindi → indi-3rdparty-libs → indi-3rdparty-drivers
+# Git:     libindi-git → indi-3rdparty-libs-git → indi-3rdparty-drivers-git
+# KStars:  (libindi + stellarsolver) → kstars / kstars-git
 
 is_x86_64_only() {
   local pkg="$1"
   for skip in "${X86_64_ONLY[@]}"; do
     [[ "$skip" == "$pkg" ]] && return 0
-  done
-  return 1
-}
-
-is_needs_cmake() {
-  local pkg="$1"
-  for dep in "${NEEDS_CMAKE_DIRS[@]}"; do
-    [[ "$dep" == "$pkg" ]] && return 0
   done
   return 1
 }
@@ -101,6 +97,15 @@ fi
 pkgs_no_dep=()
 has_cmake_dep=false
 has_needs_cmake=false
+has_libindi=false
+has_3rdparty_libs=false
+has_3rdparty_drivers=false
+has_libindi_git=false
+has_3rdparty_libs_git=false
+has_3rdparty_drivers_git=false
+has_stellarsolver=false
+has_kstars=false
+has_kstars_git=false
 
 for pkg in "${CHANGED_PKGS[@]}"; do
   if is_x86_64_only "$pkg"; then
@@ -108,18 +113,26 @@ for pkg in "${CHANGED_PKGS[@]}"; do
     continue
   fi
 
-  if [[ "$pkg" == "$CMAKE_DEP_DIR" ]]; then
-    has_cmake_dep=true
-  elif is_needs_cmake "$pkg"; then
-    has_needs_cmake=true
-  else
-    # Verify the package directory actually exists before adding it
-    if [[ -f "packages/$pkg/PKGBUILD" ]]; then
-      pkgs_no_dep+=("$pkg")
-    else
-      echo "WARNING: packages/$pkg/PKGBUILD not found, skipping" >&2
-    fi
-  fi
+  case "$pkg" in
+    "$CMAKE_DEP_DIR")         has_cmake_dep=true ;;
+    simplejpeg)               has_needs_cmake=true ;;
+    libindi)                  has_libindi=true ;;
+    indi-3rdparty-libs)       has_3rdparty_libs=true ;;
+    indi-3rdparty-drivers)    has_3rdparty_drivers=true ;;
+    libindi-git)              has_libindi_git=true ;;
+    indi-3rdparty-libs-git)   has_3rdparty_libs_git=true ;;
+    indi-3rdparty-drivers-git) has_3rdparty_drivers_git=true ;;
+    stellarsolver)            has_stellarsolver=true ;;
+    kstars)                   has_kstars=true ;;
+    kstars-git)               has_kstars_git=true ;;
+    *)
+      if [[ -f "packages/$pkg/PKGBUILD" ]]; then
+        pkgs_no_dep+=("$pkg")
+      else
+        echo "WARNING: packages/$pkg/PKGBUILD not found, skipping" >&2
+      fi
+      ;;
+  esac
 done
 
 PKG_NO_DEP_JSON=$(to_json_array "${pkgs_no_dep[@]+"${pkgs_no_dep[@]}"}")
@@ -129,10 +142,28 @@ echo "=== CI package classification (aarch64) ==="
 echo "  Regular packages (matrix):        ${PKG_NO_DEP_JSON}"
 echo "  cmake-python-distributions:       ${has_cmake_dep}"
 echo "  simplejpeg (needs cmake first):   ${has_needs_cmake}"
+echo "  libindi:                          ${has_libindi}"
+echo "  indi-3rdparty-libs:               ${has_3rdparty_libs}"
+echo "  indi-3rdparty-drivers:            ${has_3rdparty_drivers}"
+echo "  libindi-git:                      ${has_libindi_git}"
+echo "  indi-3rdparty-libs-git:           ${has_3rdparty_libs_git}"
+echo "  indi-3rdparty-drivers-git:        ${has_3rdparty_drivers_git}"
+echo "  stellarsolver:                    ${has_stellarsolver}"
+echo "  kstars:                           ${has_kstars}"
+echo "  kstars-git:                       ${has_kstars_git}"
 
 # ── Emit outputs ──────────────────────────────────────────────────────────────
 {
   echo "pkgs_no_dep=${PKG_NO_DEP_JSON}"
   echo "has_cmake_dep=${has_cmake_dep}"
   echo "has_needs_cmake=${has_needs_cmake}"
+  echo "has_libindi=${has_libindi}"
+  echo "has_3rdparty_libs=${has_3rdparty_libs}"
+  echo "has_3rdparty_drivers=${has_3rdparty_drivers}"
+  echo "has_libindi_git=${has_libindi_git}"
+  echo "has_3rdparty_libs_git=${has_3rdparty_libs_git}"
+  echo "has_3rdparty_drivers_git=${has_3rdparty_drivers_git}"
+  echo "has_stellarsolver=${has_stellarsolver}"
+  echo "has_kstars=${has_kstars}"
+  echo "has_kstars_git=${has_kstars_git}"
 } >> "$GITHUB_OUTPUT"
