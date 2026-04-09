@@ -5,6 +5,10 @@ on:
       run_id:
         description: 'Run ID of the build workflow to upload from'
         required: true
+      arch:
+        description: 'Target architecture (x86_64 or aarch64)'
+        required: false
+        default: 'x86_64'
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -28,4 +32,4 @@ jobs:
       - name: Push to Hetzner
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
-            ./packages/ ${{ secrets.HETZNER_HOST }}:astromatto-repo/x86_64
+            ./packages/ ${{ secrets.HETZNER_HOST }}:astromatto-repo/${{ inputs.arch }}
