@@ -112,6 +112,8 @@ jobs:
     # kstars/kstars-git can take ~60 min; 90 is a safe ceiling
     timeout-minutes: 90
     steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
       - uses: actions/checkout@v4
 
       - name: Build ${{ matrix.package }}
