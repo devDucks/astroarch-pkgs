@@ -37,7 +37,8 @@ pacman -Syu --noconfirm --noprogressbar
 pacman -S --noconfirm --noprogressbar --needed \
   base-devel \
   git \
-  sudo
+  sudo \
+  pipewire-jack
 
 # ── Install any locally-built prerequisite packages ───────────────────────────
 # Used when simplejpeg is built right after cmake-python-distributions.
