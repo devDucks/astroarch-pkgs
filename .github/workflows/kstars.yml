@@ -1,13 +1,6 @@
 name: Build KStars chain
 
 on:
-  push:
-    paths:
-      - 'packages/kstars/**'
-      - 'packages/kstars-git/**'
-      - 'packages/stellarsolver/**'
-      - 'packages/libindi/**'
-      - 'packages/libindi-git/**'
   workflow_dispatch:
     inputs:
       package:
@@ -31,29 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
-    outputs:
-      has_libindi:            ${{ steps.classify.outputs.has_libindi }}
-      has_libindi_git:        ${{ steps.classify.outputs.has_libindi_git }}
-      has_stellarsolver:      ${{ steps.classify.outputs.has_stellarsolver }}
-      has_kstars:             ${{ steps.classify.outputs.has_kstars }}
-      has_kstars_git:         ${{ steps.classify.outputs.has_kstars_git }}
-      has_kstars_libindi:     ${{ steps.classify.outputs.has_kstars_libindi }}
-      has_kstars_git_libindi: ${{ steps.classify.outputs.has_kstars_git_libindi }}
-      arch_matrix:            ${{ steps.set-matrix.outputs.arch_matrix }}
     steps:
-      - name: Install git
-        run: pacman -Sy --noconfirm --noprogressbar git
-
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Detect and classify changed packages
-        id: classify
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-        run: bash ci/detect-changes.sh "${{ inputs.package }}"
-
       - name: Set arch matrix
         id: set-matrix
         run: |
@@ -69,7 +40,6 @@ jobs:
   build-libindi:
     name: "Build libindi [${{ matrix.arch }}]"
     needs: detect
-    if: needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_kstars_libindi == 'true'
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
@@ -99,7 +69,6 @@ jobs:
   build-stellarsolver:
     name: "Build stellarsolver [${{ matrix.arch }}]"
     needs: detect
-    if: needs.detect.outputs.has_stellarsolver == 'true'
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
@@ -129,11 +98,6 @@ jobs:
   build-kstars:
     name: "Build kstars [${{ matrix.arch }}]"
     needs: [detect, build-libindi, build-stellarsolver]
-    if: |
-      always() &&
-      needs.detect.outputs.has_kstars == 'true' &&
-      (needs.build-libindi.result == 'success' || needs.build-libindi.result == 'skipped') &&
-      (needs.build-stellarsolver.result == 'success' || needs.build-stellarsolver.result == 'skipped')
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
@@ -172,85 +136,5 @@ jobs:
         with:
           name: pkg-kstars-${{ matrix.arch }}
           path: packages/kstars/${{ matrix.pkg_glob }}
-          if-no-files-found: error
-          retention-days: 14
-
-  # ── libindi-git ───────────────────────────────────────────────────────────────
-  build-libindi-git:
-    name: "Build libindi-git [${{ matrix.arch }}]"
-    needs: detect
-    if: needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_kstars_git_libindi == 'true'
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
-    runs-on: ${{ fromJson(matrix.runner) }}
-    container:
-      image: ${{ matrix.image }}
-    timeout-minutes: 30
-    steps:
-      - name: Bootstrap pacman keyring
-        if: matrix.arch == 'aarch64'
-        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
-
-      - uses: actions/checkout@v4
-
-      - name: Build libindi-git
-        run: bash ci/build-package.sh libindi-git
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-libindi-git-${{ matrix.arch }}
-          path: packages/libindi-git/${{ matrix.pkg_glob }}
-          if-no-files-found: error
-          retention-days: 14
-
-  # ── kstars-git: libindi-git + stellarsolver → kstars-git ─────────────────────
-  build-kstars-git:
-    name: "Build kstars-git [${{ matrix.arch }}]"
-    needs: [detect, build-libindi-git, build-stellarsolver]
-    if: |
-      always() &&
-      needs.detect.outputs.has_kstars_git == 'true' &&
-      (needs.build-libindi-git.result == 'success' || needs.build-libindi-git.result == 'skipped') &&
-      (needs.build-stellarsolver.result == 'success' || needs.build-stellarsolver.result == 'skipped')
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
-    runs-on: ${{ fromJson(matrix.runner) }}
-    container:
-      image: ${{ matrix.image }}
-    timeout-minutes: 90
-    steps:
-      - name: Bootstrap pacman keyring
-        if: matrix.arch == 'aarch64'
-        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
-
-      - uses: actions/checkout@v4
-
-      - name: Download libindi-git artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: pkg-libindi-git-${{ matrix.arch }}
-          path: /tmp/local-pkgs/
-
-      - name: Download stellarsolver artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: pkg-stellarsolver-${{ matrix.arch }}
-          path: /tmp/local-pkgs/
-
-      - name: Build kstars-git
-        env:
-          LOCAL_PKG_DIR: /tmp/local-pkgs
-        run: bash ci/build-package.sh kstars-git
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-kstars-git-${{ matrix.arch }}
-          path: packages/kstars-git/${{ matrix.pkg_glob }}
           if-no-files-found: error
           retention-days: 14
