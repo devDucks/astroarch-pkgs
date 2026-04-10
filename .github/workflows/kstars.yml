@@ -7,6 +7,8 @@ on:
         description: 'Package to build (kstars, kstars-git, stellarsolver, libindi, libindi-git; leave blank to auto-detect)'
         required: false
         default: ''
+      outputs:
+        arch_matrix: ${{ steps.set-matrix.outputs.arch_matrix }}
       arch:
         description: 'Architecture to build'
         required: false
