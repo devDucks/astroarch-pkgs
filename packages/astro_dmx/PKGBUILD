@@ -10,7 +10,7 @@ license=('LGPLv2')
 depends=(gtk3 libsm)
 source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/linux-x86_64/astrodmx-capture_${pkgver}_x86-64-manual.tar.gz")
 [ "$CARCH" = "aarch64" ] && source=("astro_dmx.tar.gz::https://www.astrodmx-capture.org.uk/downloads/astrodmx/current/linux-arm/astrodmx-glibc-2.28_${pkgver}_manual-aarch64.tar.gz")
-sha256sums=('5462438a7f0123afd236ecff24961e65946652b0dce6765ded0a77d3a602fdfe')
+sha256sums=('a08fc998ffb22a1321ded473738e4d3ba04b03010e8bace355b0f51a4053fd83')
 [ "$CARCH" = "aarch64" ] && sha256sums=('0eb1914409fa99e744075e4c773fe84738c876f3bafa8a3a5da64cae6e7351a8')
 _app_folder=AstroDMx-${pkgver}-manual
 [ "$CARCH" = "aarch64" ] && _app_folder=R-Linux-aarch64-2.28
