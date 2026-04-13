@@ -69,7 +69,7 @@ if [[ -n "$OVERRIDE" ]]; then
     kstars-git)
       CHANGED_PKGS+=(stellarsolver)
       has_kstars_git_libindi=true ;;
-    rpicamm-apps)
+    rpicam-apps)
       CHANGED_PKGS+=(libcamera-pi)
   esac
 else
