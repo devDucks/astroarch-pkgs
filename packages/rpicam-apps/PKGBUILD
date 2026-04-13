@@ -11,6 +11,7 @@ license=(LGPLv2
          BSD2
          BSD3)
 depends=(boost
+	 boost-libs
 	 libcamera
          libpisp
          python-piexif
