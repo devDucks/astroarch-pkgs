@@ -15,16 +15,14 @@ jobs:
   # ── Job 1: detect which packages changed ─────────────────────────────────
   detect:
     name: Detect changed packages
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     container:
-      image: ghcr.io/devducks/archlinuxarm:latest
+      image: archlinux:latest
     outputs:
       pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
       has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
       has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
     steps:
-      - name: bootstrap
-        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
 
