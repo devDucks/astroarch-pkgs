@@ -13,6 +13,7 @@ license=(LGPLv2
 depends=(boost
 	 boost-libs
 	 libcamera
+	 libexif
          libpisp
          python-piexif
          python-prctl)
