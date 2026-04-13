@@ -113,6 +113,8 @@ jobs:
     steps:
       - name: bootstrap
         run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - name : set locale
+        run: echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
       - uses: actions/checkout@v4
 
       - name: Build libcamera
@@ -141,6 +143,8 @@ jobs:
     steps:
       - name: bootstrap
         run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - name: set locale
+        run: echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
       - uses: actions/checkout@v4
 
       # Present only when libcamera was rebuilt in this run.
