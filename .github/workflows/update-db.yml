@@ -1,0 +1,34 @@
+name: Update db
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Target architecture'
+        required: true
+        default: 'x86_64'
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+
+jobs:
+  update-db:
+    name: Update ${{ inputs.arch }} database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H $(echo "${{ secrets.HETZNER_HOST }}" | cut -d@ -f2) >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Run database update on server
+        run: |
+          host=$(echo "${{ secrets.HETZNER_HOST }}" | cut -d@ -f2)
+          if [ "${{ inputs.arch }}" = "aarch64" ]; then
+            ssh -i ~/.ssh/id_deploy gha@${host} update-aarch64-database
+          else
+            ssh -i ~/.ssh/id_deploy gha@${host} update-x64-database
+          fi
