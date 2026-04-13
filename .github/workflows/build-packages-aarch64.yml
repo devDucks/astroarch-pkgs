@@ -22,6 +22,8 @@ jobs:
       pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
       has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
       has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
+      needs_libcamera: ${{ steps.classify.outputs.needs_libcamera }}
+      has_rpicam:      ${{ steps.classify.outputs.has_rpicam }}
     steps:
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
@@ -99,7 +101,70 @@ jobs:
           path: packages/simplejpeg/*.pkg.tar.xz
           retention-days: 14
 
-  # ── Job 4: matrix build for all other packages ───────────────────────────
+  # ── Job 4: build libcamera first (if changed) ────────────────────────────
+  build-libcamera:
+    name: Build libcamera
+    needs: detect
+    if: needs.detect.outputs.needs_libcamera == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 90
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - uses: actions/checkout@v4
+
+      - name: Build libcamera
+        run: bash ci/build-package.sh libcamera
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libcamera
+          path: packages/libcamera/*.pkg.tar.xz
+          retention-days: 14
+
+  # ── Job 5: build rpicam-apps after libcamera ─────────────────────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only rpicam-apps changed (job 4 was skipped).
+  build-rpicam-apps:
+    name: Build rpicam-apps
+    needs:
+      - detect
+      - build-libcamera
+    if: needs.detect.outputs.has_rpicam == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 90
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - uses: actions/checkout@v4
+
+      # Present only when libcamera was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download libcamera artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libcamera
+          path: /tmp/local-pkgs/
+
+      - name: Build rpicam-apps
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh rpicam-apps
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-rpicam-apps
+          path: packages/rpicam-apps/*.pkg.tar.xz
+          retention-days: 14
+
+  # ── Job 6: matrix build for all other packages ───────────────────────────
   build-package:
     name: "Build ${{ matrix.package }}"
     needs: detect

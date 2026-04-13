@@ -70,7 +70,7 @@ if [[ -n "$OVERRIDE" ]]; then
       CHANGED_PKGS+=(stellarsolver)
       has_kstars_git_libindi=true ;;
     rpicam-apps)
-      CHANGED_PKGS+=(libcamera-pi)
+      CHANGED_PKGS+=(libcamera)
   esac
 else
     # Determine base commit for the diff.
@@ -129,6 +129,7 @@ has_kstars_git=false
 has_kstars_libindi=false
 has_kstars_git_libindi=false
 needs_libcamera=false
+has_rpicam=false
 
 for pkg in "${CHANGED_PKGS[@]}"; do
   if is_x86_64_only "$pkg"; then
@@ -148,7 +149,8 @@ for pkg in "${CHANGED_PKGS[@]}"; do
     stellarsolver)            has_stellarsolver=true ;;
     kstars)                   has_kstars=true ;;
     kstars-git)               has_kstars_git=true ;;
-    libcamera-pi)             needs_libcamera=true ;;
+    libcamera)                needs_libcamera=true ;;
+    rpicam-apps)              has_rpicam=true ;;
     *)
       if [[ -f "packages/$pkg/PKGBUILD" ]]; then
         pkgs_no_dep+=("$pkg")
@@ -177,7 +179,8 @@ echo "  kstars:                           ${has_kstars}"
 echo "  kstars-git:                       ${has_kstars_git}"
 echo "  kstars_libindi (prereq only):     ${has_kstars_libindi}"
 echo "  kstars_git_libindi (prereq only): ${has_kstars_git_libindi}"
-echo "  libcamera-pi:                     ${needs_libcamera}"
+echo "  libcamera:                        ${needs_libcamera}"
+echo "  rpicam-apps (needs libcamera):    ${has_rpicam}"
 
 # ── Emit outputs ──────────────────────────────────────────────────────────────
 {
@@ -196,4 +199,5 @@ echo "  libcamera-pi:                     ${needs_libcamera}"
   echo "has_kstars_libindi=${has_kstars_libindi}"
   echo "has_kstars_git_libindi=${has_kstars_git_libindi}"
   echo "needs_libcamera=${needs_libcamera}"
+  echo "has_rpicam=${has_rpicam}"
 } >> "$GITHUB_OUTPUT"
