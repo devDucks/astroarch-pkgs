@@ -15,7 +15,7 @@ jobs:
   # ── Job 1: detect which packages changed ─────────────────────────────────
   detect:
     name: Detect changed packages
-    runs-on: [self-hosted, self-hosted-aarch64]
+    runs-on: [self-hosted]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest
     outputs:
@@ -43,7 +43,7 @@ jobs:
     name: Build cmake-python-distributions
     needs: detect
     if: needs.detect.outputs.has_cmake_dep == 'true'
-    runs-on: [self-hosted, self-hosted-aarch64]
+    runs-on: [self-hosted]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest
     timeout-minutes: 30
@@ -71,7 +71,7 @@ jobs:
       - detect
       - build-cmake-python-distributions
     if: needs.detect.outputs.has_needs_cmake == 'true'
-    runs-on: [self-hosted, self-hosted-aarch64]
+    runs-on: [self-hosted]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest
     timeout-minutes: 30
@@ -110,7 +110,7 @@ jobs:
       fail-fast: false
       matrix:
         package: ${{ fromJson(needs.detect.outputs.pkgs_no_dep) }}
-    runs-on: [self-hosted, self-hosted-aarch64]
+    runs-on: [self-hosted]
     container:
       image: ghcr.io/devducks/archlinuxarm:latest
     # 90 is a safe ceiling for long builds
