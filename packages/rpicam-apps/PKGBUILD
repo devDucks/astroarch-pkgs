@@ -15,6 +15,7 @@ depends=(boost
 	 libcamera
 	 libexif
          libpisp
+	 libpng
          python-piexif
          python-prctl)
 makedepends=(meson
