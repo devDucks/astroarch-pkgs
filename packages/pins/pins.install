@@ -1,0 +1,33 @@
+post_install() {
+    # Create system user if it doesn't exist
+    if ! id -u pins &>/dev/null; then
+        useradd -r -s /usr/bin/nologin -d /opt/pins -c "NINA pins service user" pins
+    fi
+
+    # Fix ownership of install dir
+    chown -R pins:pins /opt/pins
+
+    systemctl daemon-reload
+    echo "To enable and start the service, run:"
+    echo "  systemctl enable --now pins.service"
+}
+
+post_upgrade() {
+    chown -R pins:pins /opt/pins
+    systemctl daemon-reload
+    if systemctl is-active --quiet pins.service; then
+        systemctl restart pins.service
+    fi
+}
+
+pre_remove() {
+    if systemctl is-active --quiet pins.service; then
+        systemctl stop pins.service
+    fi
+    systemctl disable pins.service 2>/dev/null || true
+    systemctl daemon-reload
+}
+
+post_remove() {
+    userdel pins 2>/dev/null || true
+}

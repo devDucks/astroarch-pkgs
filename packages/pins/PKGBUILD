@@ -1,0 +1,92 @@
+# Maintainer: Mattia Procopio
+pkgname=pins
+pkgver=3.3.0.1023
+pkgrel=1
+pkgdesc="N.I.N.A. (Nighttime Imaging 'N' Astronomy) - pins Linux fork"
+arch=('x86_64' 'aarch64')
+url="https://github.com/nitr57/pins"
+license=('MPL-2.0')
+depends=()
+makedepends=('dotnet-sdk>=10' 'git' 'rsync')
+backup=()
+install="${pkgname}.install"
+
+source=(
+    "${pkgname}::git+file:///home/matt/data/repos/pins#branch=develop"
+    "external.zip::http://cloud.astro-narren.de/public.php/dav/files/7tEAZoEpCMCYyeX/?accept=zip"
+    "${pkgname}.service"
+)
+noextract=('external.zip')
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP')
+
+_install_dir="/opt/${pkgname}"
+_runtime_id="linux-x64"
+
+prepare() {
+    if [ "${CARCH}" = "aarch64" ]; then
+        _runtime_id="linux-arm64"
+    fi
+
+    # Populate NINA/External from downloaded zip bundle
+    local unzip_dir="${srcdir}/external-unzipped"
+    rm -rf "${unzip_dir}" "${srcdir}/${pkgname}/NINA/External"
+    mkdir -p "${unzip_dir}" "${srcdir}/${pkgname}/NINA/External"
+    unzip -q "${srcdir}/external.zip" -d "${unzip_dir}"
+
+    if [ ! -d "${unzip_dir}/external" ]; then
+        echo "Downloaded zip did not contain top-level folder 'external'" >&2
+        exit 1
+    fi
+    rsync -a "${unzip_dir}/external/" "${srcdir}/${pkgname}/NINA/External/"
+
+    # Restore NuGet dependencies
+    cd "${srcdir}/${pkgname}"
+    dotnet restore "NINA/NINA.csproj" -r "${_runtime_id}"
+    dotnet restore "System.Windows.Compat/System.Windows.Compat.csproj"
+}
+
+build() {
+    if [ "${CARCH}" = "aarch64" ]; then
+        _runtime_id="linux-arm64"
+    fi
+
+    cd "${srcdir}/${pkgname}"
+
+    dotnet build "System.Windows.Compat/System.Windows.Compat.csproj" \
+        -c Release --no-restore
+
+    dotnet build "NINA/NINA.csproj" \
+        -c Release -r "${_runtime_id}" --no-restore
+
+    dotnet publish "NINA/NINA.csproj" \
+        -c Release -r "${_runtime_id}" --no-build \
+        -o "${srcdir}/publish"
+
+    # Copy native libraries bundle to publish output
+    rsync -a "${srcdir}/${pkgname}/NINA/External/" "${srcdir}/publish/External/"
+
+    # Replace System.Windows.dll with the Linux-compatible stub
+    local compat_dll="System.Windows.Compat/bin/Release/net10.0/System.Windows.dll"
+    if [ ! -f "${compat_dll}" ]; then
+        echo "System.Windows.Compat build output not found at ${compat_dll}" >&2
+        exit 1
+    fi
+    cp -f "${compat_dll}" "${srcdir}/publish/System.Windows.dll"
+}
+
+package() {
+    # Install application files
+    install -dm755 "${pkgdir}${_install_dir}"
+    rsync -a "${srcdir}/publish/" "${pkgdir}${_install_dir}/"
+    chmod 755 "${pkgdir}${_install_dir}/NINA"
+
+    # Install systemd service
+    install -Dm644 "${srcdir}/${pkgname}.service" \
+        "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
+
+    # Install license
+    install -Dm644 "${srcdir}/${pkgname}/LICENSE.txt" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
