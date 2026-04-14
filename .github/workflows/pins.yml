@@ -1,0 +1,41 @@
+name: Build pins (aarch64)
+
+on:
+  push:
+    paths:
+      - 'packages/pins/**'
+  workflow_dispatch:
+
+jobs:
+  build-pins:
+    name: Build pins
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 120
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download dotnet packages
+        run: |
+          mkdir -p /tmp/dotnet-pkgs
+          curl -fL -o /tmp/dotnet-pkgs/dotnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            http://astroarch.astromatto.com:9000/aarch64/dotnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz
+          curl -fL -o /tmp/dotnet-pkgs/dotnet-sdk-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            http://astroarch.astromatto.com:9000/aarch64/dotnet-sdk-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz
+
+      - name: Build pins
+        env:
+          LOCAL_PKG_DIR: /tmp/dotnet-pkgs
+        run: bash ci/build-package.sh pins
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-pins
+          path: packages/pins/*.pkg.tar.xz
+          if-no-files-found: error
+          retention-days: 14
