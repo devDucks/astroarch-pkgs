@@ -22,10 +22,17 @@ jobs:
       - name: Download dotnet packages
         run: |
           mkdir -p /tmp/dotnet-pkgs
-          curl -fL -o /tmp/dotnet-pkgs/dotnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
-            http://astroarch.astromatto.com:9000/aarch64/dotnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz
-          curl -fL -o /tmp/dotnet-pkgs/dotnet-sdk-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
-            http://astroarch.astromatto.com:9000/aarch64/dotnet-sdk-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz
+          base=http://astroarch.astromatto.com:9000/aarch64
+          for pkg in \
+            dotnet-host-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            dotnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            dotnet-targeting-pack-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            aspnet-runtime-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            aspnet-targeting-pack-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz \
+            dotnet-sdk-bin-10.0.5.sdk201-1-aarch64.pkg.tar.xz
+          do
+            curl -fL -o "/tmp/dotnet-pkgs/${pkg}" "${base}/${pkg}"
+          done
 
       - name: Build pins
         env:
