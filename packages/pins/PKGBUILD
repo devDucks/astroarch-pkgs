@@ -12,7 +12,7 @@ backup=()
 install="${pkgname}.install"
 
 source=(
-    "${pkgname}::git+file:///home/matt/data/repos/pins#branch=develop"
+    "${pkgname}::git+https://github.com/nitr57/pins#branch=develop"
     "external.zip::http://cloud.astro-narren.de/public.php/dav/files/7tEAZoEpCMCYyeX/?accept=zip"
     "${pkgname}.service"
 )
