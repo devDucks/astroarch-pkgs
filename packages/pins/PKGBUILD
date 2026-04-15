@@ -7,18 +7,15 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/nitr57/pins"
 license=('MPL-2.0')
 depends=()
-makedepends=('dotnet-sdk>=10' 'git' 'rsync')
+makedepends=('dotnet-sdk>=10' 'git' 'rsync' 'gcc' 'make')
 backup=()
 install="${pkgname}.install"
 
 source=(
     "${pkgname}::git+https://github.com/nitr57/pins#branch=develop"
-    "external.zip::http://cloud.astro-narren.de/public.php/dav/files/7tEAZoEpCMCYyeX/?accept=zip"
     "${pkgname}.service"
 )
-noextract=('external.zip')
 sha256sums=('SKIP'
-            'SKIP'
             'SKIP')
 
 _install_dir="/opt/${pkgname}"
@@ -28,18 +25,6 @@ prepare() {
     if [ "${CARCH}" = "aarch64" ]; then
         _runtime_id="linux-arm64"
     fi
-
-    # Populate NINA/External from downloaded zip bundle
-    local unzip_dir="${srcdir}/external-unzipped"
-    rm -rf "${unzip_dir}" "${srcdir}/${pkgname}/NINA/External"
-    mkdir -p "${unzip_dir}" "${srcdir}/${pkgname}/NINA/External"
-    unzip -q "${srcdir}/external.zip" -d "${unzip_dir}"
-
-    if [ ! -d "${unzip_dir}/external" ]; then
-        echo "Downloaded zip did not contain top-level folder 'external'" >&2
-        exit 1
-    fi
-    rsync -a "${unzip_dir}/external/" "${srcdir}/${pkgname}/NINA/External/"
 
     # Restore NuGet dependencies
     cd "${srcdir}/${pkgname}"
@@ -53,6 +38,12 @@ build() {
     fi
 
     cd "${srcdir}/${pkgname}"
+
+    # Build NOVAS and SOFA native libraries and install into NINA/External
+    make -C NOVAS31 install-server \
+        SERVER_NOVAS_DIR="../NINA/External/${_runtime_id}/NOVAS/"
+    make -C SOFA/SOFA/src install-server \
+        SERVER_SOFA_DIR="../../../NINA/External/${_runtime_id}/SOFA/"
 
     dotnet build "System.Windows.Compat/System.Windows.Compat.csproj" \
         -c Release --no-restore
