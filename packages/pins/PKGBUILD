@@ -7,7 +7,7 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/nitr57/pins"
 license=('MPL-2.0')
 depends=()
-makedepends=('dotnet-sdk>=10' 'git' 'rsync' 'gcc' 'make')
+makedepends=('dotnet-sdk>=10' 'git' 'git-lfs' 'rsync' 'gcc' 'make')
 backup=()
 install="${pkgname}.install"
 
@@ -26,8 +26,11 @@ prepare() {
         _runtime_id="linux-arm64"
     fi
 
-    # Restore NuGet dependencies
+    # Pull LFS-tracked files (NOVAS31 and SOFA sources)
     cd "${srcdir}/${pkgname}"
+    git lfs pull
+
+    # Restore NuGet dependencies
     dotnet restore "NINA/NINA.csproj" -r "${_runtime_id}"
     dotnet restore "System.Windows.Compat/System.Windows.Compat.csproj"
 }
