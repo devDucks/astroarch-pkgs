@@ -14,7 +14,10 @@ _folder=${srcdir}/astro_monitor-${pkgver}
 
 build() {
     cd ${srcdir}/astro_monitor-${pkgver}-rc2
-    cargo build --release
+    # Clear Arch CFLAGS: they are passed to ring's C compiler via the cc crate and
+    # cause silent compilation failure on Ubuntu (FORTIFY_SOURCE redefinition +
+    # -Werror=format-security). Rust code is unaffected by CFLAGS.
+    CFLAGS="" CXXFLAGS="" cargo build --release
 }
 
 package() {
