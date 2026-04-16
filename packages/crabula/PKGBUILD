@@ -1,0 +1,28 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=crabula
+pkgver=0.1.0
+_repover=0.3.0
+pkgrel=1
+pkgdesc="A small and easy FITS viewer"
+arch=(x86_64 aarch64)
+url=https://github.com/devDucks/rfitsio
+license=(GPLv3)
+depends=(gcc-libs)
+makedepends=(rustup)
+source=(https://github.com/devDucks/rfitsio/archive/refs/tags/v${_repover}.tar.gz)
+sha256sums=(9e7796989826d0ea6e4d2f8994a37806125e027ea3d4418fa0ce33c7064eb12c)
+_folder=${srcdir}/rfitsio-${pkgver}
+
+build() {
+    cd ${srcdir}/rfitsio-${_repover}
+    # Clear Arch CFLAGS: they are passed to ring's C compiler via the cc crate and
+    # cause silent compilation failure on Ubuntu (FORTIFY_SOURCE redefinition +
+    # -Werror=format-security). Rust code is unaffected by CFLAGS.
+    CFLAGS="" CXXFLAGS="" cargo build --release -p crabula
+}
+
+package() {
+    mkdir -p ${pkgdir}/usr/bin/
+    
+    mv ${srcdir}/rfitsio-${_repover}/target/release/crabula ${pkgdir}/usr/bin
+}
