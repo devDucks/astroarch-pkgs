@@ -14,9 +14,7 @@ _folder=${srcdir}/astro_monitor-${pkgver}
 
 build() {
     cd ${srcdir}/astro_monitor-${pkgver}-rc2
-    # ring 0.16.x is incompatible with rust-lld; force gcc as linker driver so
-    # -fuse-ld=bfd is understood (rust-lld, the default on Ubuntu/Rust>=1.72, rejects it)
-    RUSTFLAGS="${RUSTFLAGS} -C linker=gcc -C link-arg=-fuse-ld=bfd" cargo build --release
+    cargo build --release
 }
 
 package() {
