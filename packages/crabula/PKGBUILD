@@ -9,7 +9,7 @@ license=(GPLv3)
 depends=(gcc-libs)
 makedepends=(rustup)
 source=(https://github.com/devDucks/crabula/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=(94d718228ee75d72393a4ff582d6b6497b04dede62e0345f5ff33451f15cfa7d)
+sha256sums=(db0bdf25691f5fd89d465278068f811c1413b1c0ef2b175e52d8e4f51f89c231)
 
 build() {
     cd ${srcdir}/crabula-${pkgver}
