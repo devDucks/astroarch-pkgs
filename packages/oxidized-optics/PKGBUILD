@@ -9,10 +9,10 @@ license=(GPLv3)
 depends=(gcc-libs)
 makedepends=(rustup)
 source=(https://github.com/devDucks/rcoll/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=(1)
+sha256sums=(e3f886c3e9eafa87b4e8a45b8ed9098b2ae90bd23dc89aef047b0e81964e41d7)
 
 build() {
-    cd ${srcdir}/${pkgname}-${pkgver}
+    cd ${srcdir}/rcoll-${pkgver}
     # Clear Arch CFLAGS: they are passed to ring's C compiler via the cc crate and
     # cause silent compilation failure on Ubuntu (FORTIFY_SOURCE redefinition +
     # -Werror=format-security). Rust code is unaffected by CFLAGS.
@@ -24,7 +24,7 @@ package() {
     mkdir -p ${pkgdir}/usr/share/applications
     mkdir -p ${pkgdir}/usr/share/icons/hicolor/scalable/apps/
 
-    install -Dm644 ${srcdir}/${pkgname}-${pkgver}/logo.svg ${pkgdir}/usr/share/icons/hicolor/scalable/apps/rcoll.svg
-    install -Dm644 ${srcdir}/${pkgname}-${pkgver}/packaging/crabula.desktop ${pkgdir}/usr/share/applications/oxidized-optics.desktop
-    install -Dm755 ${srcdir}/${pkgname}-${pkgver}/target/release/rcoll ${pkgdir}/usr/bin/oxidized-optics
+    install -Dm644 ${srcdir}/rcoll-${pkgver}/logo.svg ${pkgdir}/usr/share/icons/hicolor/scalable/apps/rcoll.svg
+    install -Dm644 ${srcdir}/rcoll-${pkgver}/packaging/oxidized-optics.desktop ${pkgdir}/usr/share/applications/oxidized-optics.desktop
+    install -Dm755 ${srcdir}/rcoll-${pkgver}/target/release/rcoll ${pkgdir}/usr/bin/oxidized-optics
 }
