@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-onboarding
-pkgver=1.2.3
-pkgrel=2
+pkgver=1.2.4
+pkgrel=1
 pkgdesc='AstroArch onboarding'
 arch=(aarch64)
 url="https://github.com/devDucks/astroarch-onboarding"
@@ -21,7 +21,7 @@ depends=('ckbcomp'
 	'yaml-cpp')
 makedepends=('extra-cmake-modules' 'git')
 source=("https://github.com/sc74/astroarch-onboarding/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('2c74d154549b375eae0022fe23d6ec44fc0b7347ec00a3cbabb57116e6d6bfe1')
+sha256sums=('c00e01b3118f8c3cc84aab8cbfe2a92496dd9367084f994a49c2fe22ffe63901')
 
 build() {
 	cd "${srcdir}/${pkgname}-${pkgver}"
