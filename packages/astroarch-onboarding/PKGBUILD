@@ -13,13 +13,17 @@ license=('BSD-2-Clause'
 	'LGPL-3.0-or-later'
 	'MIT')
 depends=('ckbcomp'
-	'perl-xml-parser'
-	'perl-xml-writer'
-	'sysfsutils'
-	'setconf'
-	'cmake'
-	'yaml-cpp')
-makedepends=('extra-cmake-modules' 'git')
+         	'perl-xml-parser'
+	        'perl-xml-writer'
+         'qt6-svg'
+         	'sysfsutils'
+         	'setconf'
+	        'yaml-cpp')
+makedepends=('cmake'
+             'extra-cmake-modules'
+             'git'
+             'qt6-tools'
+             'qt6-translations')
 source=("https://github.com/sc74/astroarch-onboarding/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('c00e01b3118f8c3cc84aab8cbfe2a92496dd9367084f994a49c2fe22ffe63901')
 
