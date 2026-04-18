@@ -1,0 +1,63 @@
+name: Build astroarch-onboarding chain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # ── ckbcomp (required dependency) ────────────────────────────────────────────
+  build-ckbcomp:
+    name: "Build ckbcomp [aarch64]"
+    runs-on: ["self-hosted"]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 15
+    steps:
+      - name: Bootstrap pacman keyring
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build ckbcomp
+        run: bash ci/build-package.sh ckbcomp
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-ckbcomp-aarch64
+          path: packages/ckbcomp/*.pkg.tar.xz
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── astroarch-onboarding: ckbcomp → astroarch-onboarding ─────────────────────
+  build-astroarch-onboarding:
+    name: "Build astroarch-onboarding [aarch64]"
+    needs: build-ckbcomp
+    runs-on: ["self-hosted"]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 30
+    steps:
+      - name: Bootstrap pacman keyring
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download ckbcomp artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-ckbcomp-aarch64
+          path: /tmp/local-pkgs/
+
+      - name: Build astroarch-onboarding
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh astroarch-onboarding
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-astroarch-onboarding-aarch64
+          path: packages/astroarch-onboarding/*.pkg.tar.xz
+          if-no-files-found: error
+          retention-days: 14
