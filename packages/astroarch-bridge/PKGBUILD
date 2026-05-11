@@ -1,0 +1,33 @@
+# Maintainer: Zarletti-Osservatorio Jupiter
+pkgname=astroarch-bridge
+pkgver=0.2.13
+pkgrel=1
+pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
+arch=('any')
+url="https://github.com/devDucks/astroarch-interface"
+license=('MIT')
+depends=()
+makedepends=(uv)
+backup=()
+source=(https://github.com/devDucks/astroarch-interface/archive/refs/tags/v${pkgver}.tar.gz)
+sha256sums=(5720ace1643f47114f6901aed055501b7c0e1a44385c52db9af49fdbbc8cb73a)
+
+build() {
+    cd ${srcdir}/astroarch-interface-${pkgver}/backend
+    uv sync --no-dev
+}
+
+package() {
+    cd ${srcdir}/astroarch-interface-${pkgver}/backend
+
+    install -d "${pkgdir}/usr/lib/astroarch-bridge"
+    cp -r .venv "${pkgdir}/usr/lib/astroarch-bridge/.venv"
+
+    install -Dm644 deploy/astroarch-bridge.service \
+        "${pkgdir}/usr/lib/systemd/system/astroarch-bridge.service"
+
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/astroarch-bridge" <<'EOF'
+#!/usr/bin/env bash
+exec /usr/lib/astroarch-bridge/.venv/bin/astroarch-bridge "$@"
+EOF
+}
