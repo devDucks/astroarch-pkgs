@@ -1,18 +1,23 @@
 # Maintainer: Zarletti-Osservatorio Jupiter
 pkgname=astroarch-bridge
 pkgver=0.3.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
 url="https://github.com/Johannes1979I/astroarch-bridge"
 license=('MIT')
 depends=(
-    bash
-    qt6-tools
+    python-astropy
+    python-fastapi
+    python-numpy
+    python-pillow
+    python-pydantic
+    python-pydantic-settings
+    python-watchdog
+    python-websockets
+    uvicorn
 )
-makedepends=(
-    uv
-)
+
 optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
@@ -22,51 +27,19 @@ options=(!strip)
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
+    python -m build --wheel --no-isolation --skip-dependency-check
 
-    export UV_CACHE_DIR="${srcdir}/uv-cache"
 
-    uv venv .venv \
-        --clear \
-        --python 3.13 \
-        --managed-python \
-        --relocatable
-
-    uv sync \
-        --frozen \
-        --no-dev \
-        --no-editable \
-        --python .venv/bin/python \
-        --managed-python \
-        --link-mode copy
-
-    uv build \
-        --wheel \
-        --python .venv/bin/python \
-        --managed-python
 }
 
 package() {
     cd "${srcdir}/${pkgname}-${pkgver}"
 
-    local runtime_root="${pkgdir}/usr/lib/${pkgname}"
-    local runtime_python
-
-    runtime_python="$(realpath .venv/bin/python)"
-
-    install -d "${runtime_root}"
-    cp -a .venv "${runtime_root}/.venv"
-    cp -a "$(dirname "$(dirname "${runtime_python}")")" "${runtime_root}/python"
-
-    ln -sf ../../python/bin/python3.13 "${runtime_root}/.venv/bin/python"
-    ln -sf python "${runtime_root}/.venv/bin/python3"
-    ln -sf python "${runtime_root}/.venv/bin/python3.13"
-
-    sed -i "s|^home = .*|home = /usr/lib/${pkgname}/python/bin|" \
-        "${runtime_root}/.venv/pyvenv.cfg"
+    python -m installer --destdir="$pkgdir" dist/*.whl
 
     install -Dm755 /dev/stdin "${pkgdir}/usr/bin/${pkgname}" <<'EOF'
 #!/usr/bin/env bash
-exec /usr/lib/astroarch-bridge/.venv/bin/python -m astroarch_bridge "$@"
+exec python -m astroarch_bridge "$@"
 EOF
 
     install -Dm644 deploy/astroarch-bridge.service \
