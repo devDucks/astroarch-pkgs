@@ -17,8 +17,8 @@ depends=(
     python-websockets
     uvicorn
 )
-makedepends=(python-build)
-
+makedepends=(python-build
+	     python-setuptools)
 optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
