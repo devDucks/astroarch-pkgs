@@ -1,33 +1,77 @@
 # Maintainer: Zarletti-Osservatorio Jupiter
 pkgname=astroarch-bridge
-pkgver=0.2.14
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
-url="https://github.com/devDucks/astroarch-interface"
+url="https://github.com/Johannes1979I/astroarch-bridge"
 license=('MIT')
-depends=()
-makedepends=(uv)
-backup=()
-source=(https://github.com/devDucks/astroarch-interface/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=(ca999b76281ad868a94523fa02019c0be79880e800c52dac39b9cc0aac577c27)
+depends=(
+    bash
+    qt6-tools
+)
+makedepends=(
+    uv
+)
+optdepends=(
+    'tailscale: remote access and QR pairing with Tailscale IP detection'
+)
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Johannes1979I/astroarch-bridge/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=(c6e9b9700a469e451e61ed2a05a5d3746998dbbf0937ac8fb5c63d756f336f3f)
+options=(!strip)
 
 build() {
-    cd ${srcdir}/astroarch-interface-${pkgver}/backend
-    uv sync --no-dev
+    cd "${srcdir}/${pkgname}-${pkgver}"
+
+    export UV_CACHE_DIR="${srcdir}/uv-cache"
+
+    uv venv .venv \
+        --clear \
+        --python 3.13 \
+        --managed-python \
+        --relocatable
+
+    uv sync \
+        --frozen \
+        --no-dev \
+        --no-editable \
+        --python .venv/bin/python \
+        --managed-python \
+        --link-mode copy
+
+    uv build \
+        --wheel \
+        --python .venv/bin/python \
+        --managed-python
 }
 
 package() {
-    cd ${srcdir}/astroarch-interface-${pkgver}/backend
+    cd "${srcdir}/${pkgname}-${pkgver}"
 
-    install -d "${pkgdir}/usr/lib/astroarch-bridge"
-    cp -r .venv "${pkgdir}/usr/lib/astroarch-bridge/.venv"
+    local runtime_root="${pkgdir}/usr/lib/${pkgname}"
+    local runtime_python
+
+    runtime_python="$(realpath .venv/bin/python)"
+
+    install -d "${runtime_root}"
+    cp -a .venv "${runtime_root}/.venv"
+    cp -a "$(dirname "$(dirname "${runtime_python}")")" "${runtime_root}/python"
+
+    ln -sf ../../python/bin/python3.13 "${runtime_root}/.venv/bin/python"
+    ln -sf python "${runtime_root}/.venv/bin/python3"
+    ln -sf python "${runtime_root}/.venv/bin/python3.13"
+
+    sed -i "s|^home = .*|home = /usr/lib/${pkgname}/python/bin|" \
+        "${runtime_root}/.venv/pyvenv.cfg"
+
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/${pkgname}" <<'EOF'
+#!/usr/bin/env bash
+exec /usr/lib/astroarch-bridge/.venv/bin/python -m astroarch_bridge "$@"
+EOF
 
     install -Dm644 deploy/astroarch-bridge.service \
         "${pkgdir}/usr/lib/systemd/system/astroarch-bridge.service"
-
-    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/astroarch-bridge" <<'EOF'
-#!/usr/bin/env bash
-exec /usr/lib/astroarch-bridge/.venv/bin/astroarch-bridge "$@"
-EOF
+    sed -i "s|^ExecStart=.*|ExecStart=/usr/bin/${pkgname}|" \
+        "${pkgdir}/usr/lib/systemd/system/astroarch-bridge.service"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
