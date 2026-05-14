@@ -18,6 +18,7 @@ depends=(
     uvicorn
 )
 makedepends=(python-build
+	     python-installer
 	     python-setuptools)
 optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
