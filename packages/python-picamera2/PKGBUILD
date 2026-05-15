@@ -2,26 +2,26 @@
 
 pkgbase=python-picamera2
 pkgname=('python-pycamera2')
-pkgver=0.3.33
+pkgver=0.3.36
 pkgrel=2
 pkgdesc="Picamera2 is the libcamera-based replacement for Picamera which was a Python interface to the Raspberry Pi's legacy camera stack."
 arch=('x86_64' 'aarch64')
 license=('BSD2')
 url="https://github.com/raspberrypi/picamera2"
 depends=('python' 'libcamera')
-makedepends=('python-setuptools' 'cython')
+makedepends=('python-setuptools' 'cython' 'python-build' 'python-installer')
 source=("picamera2.tar.gz::https://github.com/raspberrypi/picamera2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('506522363b39fc833eb760ca1b3aaef845fce862cd0101f1f4fff00466422491')
+sha256sums=('2282d3fc3d83cbf9cfb54536415301685e37212308f1a1f6dbbbbfa0809cf37e')
 
 
 build() {
   cd $srcdir/picamera2-$pkgver
-  python setup.py build
+  python -m build --wheel --no-isolation
 }
 
 package() {
   cd $srcdir/picamera2-$pkgver
-  python setup.py install --root="$pkgdir" --skip-build --optimize=1
+  python -m installer --destdir="$pkgdir" --compile=1 dist/*.whl
 
   install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
