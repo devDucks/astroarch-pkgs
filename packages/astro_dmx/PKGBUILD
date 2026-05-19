@@ -33,5 +33,5 @@ package() {
     # Move now camera rules, but replace them with a lower number so that they won't conflict with the indi ones
     mkdir -p ${pkgdir}/etc/udev/rules.d
     cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-astrodmx-hardware.rules ${pkgdir}/etc/udev/rules.d/99-astrodmx-hardware.rules
-    cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-astrodmx-qhy.rules ${pkgdir}/etc/udev/rules.d/99-astrodmx-qhy.rules
+    #cp ${srcdir}/$_app_folder/etc/udev/rules.d/99-astrodmx-qhy.rules ${pkgdir}/etc/udev/rules.d/99-astrodmx-qhy.rules
 }
