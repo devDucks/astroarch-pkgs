@@ -1,0 +1,236 @@
+name: Build AArch64 Packages
+
+on:
+  push:
+    branches:
+      - main
+      - workflows
+    paths:
+      - 'packages/**/PKGBUILD'
+      - 'packages/**/*.install'
+      - 'packages/**/*.patch'
+      - 'packages/**/src/**'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Name of the package to force (e.g., indi-core); leave blank to detect automatically'
+        required: false
+        default: ''
+
+# If two workflows are triggered at the same time, the second one waits
+# for the first one to finish deploying before starting.
+concurrency:
+  group: deploy-repo
+  cancel-in-progress: false
+
+jobs:
+  # ─── Step 1: Detect modified packages ──────────────────────────────────────
+  detect-changes:
+    name: Detect modified packages
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect modified packages
+        id: detect
+        run: |
+          # If a package is forced via workflow_dispatch
+          if [[ -n "${{ github.event.inputs.package }}" ]]; then
+            PKG="${{ github.event.inputs.package }}"
+            if [[ ! -d "packages/$PKG" ]]; then
+              echo "❌ The package '$PKG' does not exist in packages/"
+              exit 1
+            fi
+            PKGS_JSON=$(echo "$PKG" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          else
+            # Detect modified directories under packages/
+            # Handle the first commit case (no HEAD~1)
+            if git rev-parse HEAD~1 &>/dev/null; then
+              BASE="HEAD~1"
+            else
+              BASE="$(git hash-object -t tree /dev/null)"
+            fi
+
+            # The "|| true" prevents grep from killing the script with exit code 1
+            # when no files under packages/ have been modified
+            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD \
+              | { grep '^packages/' || true; } \
+              | awk -F/ '{print $2}' \
+              | sort -u \
+              | { grep -v '^$' || true; })
+
+            if [[ -z "$CHANGED_DIRS" ]]; then
+              echo "No modified packages detected"
+              echo "has_changes=false" >> "$GITHUB_OUTPUT"
+              echo "packages=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            PKGS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+
+          echo "Packages to build: $PKGS_JSON"
+          echo "packages=$PKGS_JSON" >> "$GITHUB_OUTPUT"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+  # ─── Step 2: Build each package in parallel ─────────────────────────────────
+  build:
+    name: Build ${{ matrix.package }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check that the PKGBUILD exists
+        run: |
+          if [[ ! -f "packages/${{ matrix.package }}/PKGBUILD" ]]; then
+            echo "❌ No PKGBUILD found in packages/${{ matrix.package }}/"
+            exit 1
+          fi
+
+      - name: Check architecture compatibility
+        id: check_arch
+        run: |
+          # Source the PKGBUILD file in an isolated subshell to extract the 'arch' array
+          ARCHS=$(bash -c 'source packages/${{ matrix.package }}/PKGBUILD; echo "${arch[@]}"')
+          echo "Supported architectures in PKGBUILD: $ARCHS"
+
+          # Check if 'aarch64' or 'any' is present in the architecture list
+          if [[ " $ARCHS " =~ " aarch64 " ]] || [[ " $ARCHS " =~ " any " ]]; then
+            echo "✅ Package supports aarch64 or any. Proceeding with the build."
+          else
+            echo "⚠️ This package is only configured for '$ARCHS' (not aarch64)."
+            echo "Skipping build for this architecture."
+            echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # QEMU allows running aarch64 binaries on an x86_64 runner
+      - name: Set up QEMU for aarch64
+        if: steps.check_arch.outputs.skip_build != 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Build ${{ matrix.package }}
+        if: steps.check_arch.outputs.skip_build != 'true'
+        run: |
+          docker run --rm \
+            --platform linux/arm64 \
+            -v "${{ github.workspace }}/packages/${{ matrix.package }}:/workspace" \
+            -w /workspace \
+            ghcr.io/devducks/archlinuxarm:latest \
+            bash -c '
+              set -euo pipefail
+
+              echo "==> Initializing pacman keys..."
+              pacman-key --init
+              pacman-key --populate archlinuxarm
+
+              echo "==> Updating system..."
+              pacman -Syu --noconfirm
+
+              echo "==> Configuring locale..."
+              sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+              locale-gen
+              export LC_ALL=en_US.UTF-8
+              export LANG=en_US.UTF-8
+
+              echo "==> Configuring pacman (SigLevel + custom repo)..."
+              sed -i "/SigLevel/d" /etc/pacman.conf
+              sed -i "/\[options\]/a SigLevel = Never" /etc/pacman.conf
+              printf "\n[astromatto]\nServer = http://astroarch.astromatto.com:9000/\$arch\n" >> /etc/pacman.conf
+
+              echo "==> Installing dependencies and core libraries..."
+              pacman -Syu --noconfirm base-devel sudo libftdi libraw
+
+              echo "==> Setting up builder user..."
+              useradd -m builder
+              echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+              chown -R builder:builder /workspace
+
+              echo "==> Running makepkg build..."
+              cd /workspace
+              sudo -u builder makepkg -s --noconfirm --nocheck --log
+
+              echo "==> Build complete!"
+              ls -lh *.pkg.tar.* 2>/dev/null || echo "No .pkg.tar.* files found"
+            '
+
+      - name: List produced artifacts
+        if: steps.check_arch.outputs.skip_build != 'true'
+        run: |
+          echo "Built packages:"
+          ls -lh packages/${{ matrix.package }}/*.pkg.tar.* 2>/dev/null \
+            || echo "No package found — check the logs above"
+
+      - name: Upload artifact
+        if: steps.check_arch.outputs.skip_build != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-aarch64
+          path: packages/${{ matrix.package }}/*.pkg.tar.*
+          if-no-files-found: error
+          retention-days: 14
+
+#  # ─── Step 3: Deploy to the Pacman repository ────────────────────────────────
+#  # Runs only when ALL matrix builds are complete.
+#  deploy:
+#    name: Deploy to Pacman repository
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Download all artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: dist/
+
+#      - name: List packages to deploy
+#        run: |
+#          echo "Packages to deploy:"
+#          find dist/ -name "*.pkg.tar.*" | sort
+
+#      - name: Deploy via SCP and rebuild repo database
+#        env:
+#          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+#          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+#          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+#          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+#        run: |
+#          # Write the SSH key to a temp file
+#          echo "$DEPLOY_KEY" > /tmp/deploy_key
+#          chmod 600 /tmp/deploy_key
+
+#          SSH_OPTS="-i /tmp/deploy_key -o StrictHostKeyChecking=no"
+
+#          # Copy each package to the server
+#          find dist/ -name "*.pkg.tar.*" | while read pkg; do
+#            echo "-> Sending $(basename $pkg)..."
+#            scp $SSH_OPTS "$pkg" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/aarch64/"
+#          done
+
+#          # Rebuild the Pacman repository database on the server
+#          # repo-add --remove also removes older versions of the same package
+#          echo "-> Rebuilding Pacman database..."
+#          ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" bash << 'EOF'
+#            set -euo pipefail
+#            cd "${DEPLOY_PATH}/aarch64"
+#            repo-add --remove astromatto.db.tar.gz *.pkg.tar.*
+#            echo "✅ Database updated"
+#            ls -lh *.pkg.tar.*
+#          EOF
+
+#          # Clean up SSH key
+#          rm -f /tmp/deploy_key

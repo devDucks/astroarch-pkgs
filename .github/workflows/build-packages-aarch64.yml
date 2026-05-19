@@ -1,236 +1,199 @@
-name: Build AArch64 Packages
+name: Build changed packages (aarch64)
 
 on:
   push:
-    branches:
-      - main
-      - workflows
     paths:
-      - 'packages/**/PKGBUILD'
-      - 'packages/**/*.install'
-      - 'packages/**/*.patch'
-      - 'packages/**/src/**'
+      - 'packages/**'
   workflow_dispatch:
     inputs:
       package:
-        description: 'Name of the package to force (e.g., indi-core); leave blank to detect automatically'
+        description: 'Package name to build (leave blank to detect from last commit)'
         required: false
         default: ''
 
-# If two workflows are triggered at the same time, the second one waits
-# for the first one to finish deploying before starting.
-concurrency:
-  group: deploy-repo
-  cancel-in-progress: false
-
 jobs:
-  # ─── Step 1: Detect modified packages ──────────────────────────────────────
-  detect-changes:
-    name: Detect modified packages
+  # ── Job 1: detect which packages changed ─────────────────────────────────
+  detect:
+    name: Detect changed packages
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
     outputs:
-      packages: ${{ steps.detect.outputs.packages }}
-      has_changes: ${{ steps.detect.outputs.has_changes }}
+      pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
+      has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
+      has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
+      needs_libcamera: ${{ steps.classify.outputs.needs_libcamera }}
+      has_rpicam:      ${{ steps.classify.outputs.has_rpicam }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Install git
+        run: pacman -Sy --noconfirm --noprogressbar git
+
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Detect modified packages
-        id: detect
-        run: |
-          # If a package is forced via workflow_dispatch
-          if [[ -n "${{ github.event.inputs.package }}" ]]; then
-            PKG="${{ github.event.inputs.package }}"
-            if [[ ! -d "packages/$PKG" ]]; then
-              echo "❌ The package '$PKG' does not exist in packages/"
-              exit 1
-            fi
-            PKGS_JSON=$(echo "$PKG" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          else
-            # Detect modified directories under packages/
-            # Handle the first commit case (no HEAD~1)
-            if git rev-parse HEAD~1 &>/dev/null; then
-              BASE="HEAD~1"
-            else
-              BASE="$(git hash-object -t tree /dev/null)"
-            fi
+      - name: Detect and classify changed packages
+        id: classify
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: bash ci/detect-changes-aarch64.sh "${{ inputs.package }}"
 
-            # The "|| true" prevents grep from killing the script with exit code 1
-            # when no files under packages/ have been modified
-            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD \
-              | { grep '^packages/' || true; } \
-              | awk -F/ '{print $2}' \
-              | sort -u \
-              | { grep -v '^$' || true; })
+  # ── Job 2: build cmake-python-distributions first (if changed) ───────────
+  build-cmake-python-distributions:
+    name: Build cmake-python-distributions
+    needs: detect
+    if: needs.detect.outputs.has_cmake_dep == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 30
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - uses: actions/checkout@v4
 
-            if [[ -z "$CHANGED_DIRS" ]]; then
-              echo "No modified packages detected"
-              echo "has_changes=false" >> "$GITHUB_OUTPUT"
-              echo "packages=[]" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
+      - name: Build cmake-python-distributions
+        run: bash ci/build-package.sh cmake-python-distributions
 
-            PKGS_JSON=$(echo "$CHANGED_DIRS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          fi
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-cmake-python-distributions
+          path: packages/cmake-python-distributions/*.pkg.tar.xz
+          retention-days: 14
 
-          echo "Packages to build: $PKGS_JSON"
-          echo "packages=$PKGS_JSON" >> "$GITHUB_OUTPUT"
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+  # ── Job 3: build simplejpeg after cmake-python-distributions ─────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only simplejpeg changed (job 2 was skipped).
+  build-simplejpeg:
+    name: Build simplejpeg
+    needs:
+      - detect
+      - build-cmake-python-distributions
+    if: needs.detect.outputs.has_needs_cmake == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 30
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - uses: actions/checkout@v4
 
-  # ─── Step 2: Build each package in parallel ─────────────────────────────────
-  build:
-    name: Build ${{ matrix.package }}
-    needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
+      # Present only when cmake-python-distributions was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download cmake-python-distributions artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-cmake-python-distributions
+          path: /tmp/local-pkgs/
+
+      - name: Build simplejpeg
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh simplejpeg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-simplejpeg
+          path: packages/simplejpeg/*.pkg.tar.xz
+          retention-days: 14
+
+  # ── Job 4: build libcamera first (if changed) ────────────────────────────
+  build-libcamera:
+    name: Build libcamera
+    needs: detect
+    if: needs.detect.outputs.needs_libcamera == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 90
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - name : set locale
+        run: echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
+      - uses: actions/checkout@v4
+
+      - name: Build libcamera
+        run: bash ci/build-package.sh libcamera
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libcamera
+          path: packages/libcamera/*.pkg.tar.xz
+          retention-days: 14
+
+  # ── Job 5: build rpicam-apps after libcamera ─────────────────────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only rpicam-apps changed (job 4 was skipped).
+  build-rpicam-apps:
+    name: Build rpicam-apps
+    needs:
+      - detect
+      - build-libcamera
+    if: needs.detect.outputs.has_rpicam == 'true'
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    timeout-minutes: 90
+    steps:
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - name: set locale
+        run: echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
+      - uses: actions/checkout@v4
+
+      # Present only when libcamera was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download libcamera artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libcamera
+          path: /tmp/local-pkgs/
+
+      - name: Build rpicam-apps
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh rpicam-apps
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-rpicam-apps
+          path: packages/rpicam-apps/*.pkg.tar.xz
+          retention-days: 14
+
+  # ── Job 6: matrix build for all other packages ───────────────────────────
+  build-package:
+    name: "Build ${{ matrix.package }}"
+    needs: detect
+    if: needs.detect.outputs.pkgs_no_dep != '[]'
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
-
+        package: ${{ fromJson(needs.detect.outputs.pkgs_no_dep) }}
+    runs-on: [self-hosted]
+    container:
+      image: ghcr.io/devducks/archlinuxarm:latest
+    # 90 is a safe ceiling for long builds
+    timeout-minutes: 90
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check that the PKGBUILD exists
-        run: |
-          if [[ ! -f "packages/${{ matrix.package }}/PKGBUILD" ]]; then
-            echo "❌ No PKGBUILD found in packages/${{ matrix.package }}/"
-            exit 1
-          fi
-
-      - name: Check architecture compatibility
-        id: check_arch
-        run: |
-          # Source the PKGBUILD file in an isolated subshell to extract the 'arch' array
-          ARCHS=$(bash -c 'source packages/${{ matrix.package }}/PKGBUILD; echo "${arch[@]}"')
-          echo "Supported architectures in PKGBUILD: $ARCHS"
-
-          # Check if 'aarch64' or 'any' is present in the architecture list
-          if [[ " $ARCHS " =~ " aarch64 " ]] || [[ " $ARCHS " =~ " any " ]]; then
-            echo "✅ Package supports aarch64 or any. Proceeding with the build."
-          else
-            echo "⚠️ This package is only configured for '$ARCHS' (not aarch64)."
-            echo "Skipping build for this architecture."
-            echo "skip_build=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # QEMU allows running aarch64 binaries on an x86_64 runner
-      - name: Set up QEMU for aarch64
-        if: steps.check_arch.outputs.skip_build != 'true'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
+      - name: bootstrap
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+      - uses: actions/checkout@v4
 
       - name: Build ${{ matrix.package }}
-        if: steps.check_arch.outputs.skip_build != 'true'
-        run: |
-          docker run --rm \
-            --platform linux/arm64 \
-            -v "${{ github.workspace }}/packages/${{ matrix.package }}:/workspace" \
-            -w /workspace \
-            ghcr.io/devducks/archlinuxarm:latest \
-            bash -c '
-              set -euo pipefail
-
-              echo "==> Initializing pacman keys..."
-              pacman-key --init
-              pacman-key --populate archlinuxarm
-
-              echo "==> Updating system..."
-              pacman -Syu --noconfirm
-
-              echo "==> Configuring locale..."
-              sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
-              locale-gen
-              export LC_ALL=en_US.UTF-8
-              export LANG=en_US.UTF-8
-
-              echo "==> Configuring pacman (SigLevel + custom repo)..."
-              sed -i "/SigLevel/d" /etc/pacman.conf
-              sed -i "/\[options\]/a SigLevel = Never" /etc/pacman.conf
-              printf "\n[astromatto]\nServer = http://astroarch.astromatto.com:9000/\$arch\n" >> /etc/pacman.conf
-
-              echo "==> Installing dependencies and core libraries..."
-              pacman -Syu --noconfirm base-devel sudo libftdi libraw
-
-              echo "==> Setting up builder user..."
-              useradd -m builder
-              echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-              chown -R builder:builder /workspace
-
-              echo "==> Running makepkg build..."
-              cd /workspace
-              sudo -u builder makepkg -s --noconfirm --nocheck --log
-
-              echo "==> Build complete!"
-              ls -lh *.pkg.tar.* 2>/dev/null || echo "No .pkg.tar.* files found"
-            '
-
-      - name: List produced artifacts
-        if: steps.check_arch.outputs.skip_build != 'true'
-        run: |
-          echo "Built packages:"
-          ls -lh packages/${{ matrix.package }}/*.pkg.tar.* 2>/dev/null \
-            || echo "No package found — check the logs above"
+        run: bash ci/build-package.sh "${{ matrix.package }}"
 
       - name: Upload artifact
-        if: steps.check_arch.outputs.skip_build != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.package }}-aarch64
-          path: packages/${{ matrix.package }}/*.pkg.tar.*
+          name: "pkg-${{ matrix.package }}"
+          path: "packages/${{ matrix.package }}/*.pkg.tar.xz"
           if-no-files-found: error
           retention-days: 14
-
-#  # ─── Step 3: Deploy to the Pacman repository ────────────────────────────────
-#  # Runs only when ALL matrix builds are complete.
-#  deploy:
-#    name: Deploy to Pacman repository
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Download all artifacts
-#        uses: actions/download-artifact@v4
-#        with:
-#          path: dist/
-
-#      - name: List packages to deploy
-#        run: |
-#          echo "Packages to deploy:"
-#          find dist/ -name "*.pkg.tar.*" | sort
-
-#      - name: Deploy via SCP and rebuild repo database
-#        env:
-#          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-#          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-#          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-#          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-#        run: |
-#          # Write the SSH key to a temp file
-#          echo "$DEPLOY_KEY" > /tmp/deploy_key
-#          chmod 600 /tmp/deploy_key
-
-#          SSH_OPTS="-i /tmp/deploy_key -o StrictHostKeyChecking=no"
-
-#          # Copy each package to the server
-#          find dist/ -name "*.pkg.tar.*" | while read pkg; do
-#            echo "-> Sending $(basename $pkg)..."
-#            scp $SSH_OPTS "$pkg" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/aarch64/"
-#          done
-
-#          # Rebuild the Pacman repository database on the server
-#          # repo-add --remove also removes older versions of the same package
-#          echo "-> Rebuilding Pacman database..."
-#          ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" bash << 'EOF'
-#            set -euo pipefail
-#            cd "${DEPLOY_PATH}/aarch64"
-#            repo-add --remove astromatto.db.tar.gz *.pkg.tar.*
-#            echo "✅ Database updated"
-#            ls -lh *.pkg.tar.*
-#          EOF
-
-#          # Clean up SSH key
-#          rm -f /tmp/deploy_key
