@@ -24,7 +24,7 @@ optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Johannes1979I/astroarch-bridge/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=(SKIP)
+sha256sums=('cd93d6555a18d998cd7bd158f56c7b1af66f60405235f63ffba8f30e1d4e0bdc')
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
