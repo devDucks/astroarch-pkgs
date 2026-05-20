@@ -29,21 +29,14 @@ sha256sums=(96e1f86381baae42bdf6edd56aee94d959cf54489f5c17bd3c3eb3becf018bf6)
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
     python -m build --wheel --no-isolation --skip-dependency-check
-
-
 }
 
 package() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
-
-    python -m installer --destdir="$pkgdir" dist/*.whl
-
-    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/${pkgname}" <<'EOF'
-#!/usr/bin/env bash
-exec python -m astroarch_bridge "$@"
-EOF
-
-    install -Dm644 deploy/astroarch-bridge.service \
-        "${pkgdir}/usr/lib/systemd/system/astroarch-bridge.service"
-    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 "deploy/astroarch-bridge.service" \
+    "$pkgdir/usr/lib/systemd/user/astroarch-bridge.service"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  mkdir -p "$pkgdir/usr/share/${pkgname}/desktop_dashboard"
+  cp -r "desktop_dashboard/." "$pkgdir/usr/share/${pkgname}/desktop_dashboard/"
 }
