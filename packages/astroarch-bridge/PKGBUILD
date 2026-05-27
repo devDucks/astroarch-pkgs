@@ -1,6 +1,6 @@
 # Maintainer: Zarletti-Osservatorio Jupiter
 pkgname=astroarch-bridge
-pkgver=0.3.1
+pkgver=0.3.9
 pkgrel=1
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
@@ -24,7 +24,7 @@ optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Johannes1979I/astroarch-bridge/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=(9b4b5187cdcb583f320ee6ba541da65d7c960d9674852c8d319b4748fc6424e0)
+sha256sums=(96e1f86381baae42bdf6edd56aee94d959cf54489f5c17bd3c3eb3becf018bf6)
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
