@@ -79,7 +79,7 @@ prepare() {
 }
 
 build() {
-  meson setup $pkgbase build --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=enabled -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled -Drpi-awb-nn=disabled
+  meson setup $pkgbase build -Dc_args="-Wno-array-bounds" -Dcpp_args="-Wno-array-bounds" --prefix=/usr --libexecdir=lib --sbindir=bin --auto-features=enabled --wrap-mode=nodownload --buildtype=release -Db_lto=false -Db_pie=true -Dtracing=disabled -Dpython.bytecompile=1 -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=enabled -Dgstreamer=enabled -Dtest=true -Dlc-compliance=enabled -Dcam=enabled -Dqcam=enabled -Ddocumentation=enabled -Dpycamera=enabled -Drpi-awb-nn=disabled
   meson compile -C build
   #ninja -C build install
 }
