@@ -1,6 +1,6 @@
 # Maintainer: Zarletti-Osservatorio Jupiter
 pkgname=astroarch-bridge
-pkgver=0.3.2
+pkgver=0.3.9
 pkgrel=1
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
@@ -24,7 +24,7 @@ optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Johannes1979I/astroarch-bridge/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('cd93d6555a18d998cd7bd158f56c7b1af66f60405235f63ffba8f30e1d4e0bdc')
+sha256sums=(96e1f86381baae42bdf6edd56aee94d959cf54489f5c17bd3c3eb3becf018bf6)
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
@@ -34,9 +34,8 @@ build() {
 package() {
   cd "${srcdir}/${pkgname}-${pkgver}"
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -Dm644 "deploy/astroarch-bridge.service" \
-    "$pkgdir/usr/lib/systemd/user/astroarch-bridge.service"
+  install -Dm644 "deploy/astroarch-bridge.service" "$pkgdir/usr/lib/systemd/user/astroarch-bridge.service"
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-  mkdir -p "$pkgdir/usr/share/${pkgname}/desktop_dashboard"
+  install -d "$pkgdir/usr/share/${pkgname}/desktop_dashboard"
   cp -r "desktop_dashboard/." "$pkgdir/usr/share/${pkgname}/desktop_dashboard/"
 }
