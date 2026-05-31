@@ -21,11 +21,13 @@ pkgver() {
 }
 
 build() {
-  cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
+  cmake -B $srcdir/build \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Debug \
 	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-    	-DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+    -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
 	-DCMAKE_CXX_FLAGS="$CXX_FLAGS -ffat-lto-objects -Wp,-U_GLIBCXX_ASSERTIONS" \
-    	libindi
+    libindi
   cmake --build $srcdir/build
 }
 

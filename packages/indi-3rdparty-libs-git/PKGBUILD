@@ -10,11 +10,11 @@ url="https://indilib.org"
 license=('LGPLv2')
 depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
 makedepends=(cmake)
-source=("indi-3rdparty::https://github.com/indilib/indi-3rdparty/archive/refs/heads/master.zip")
+source=("indi-3rdparty::git+https://github.com/indilib/indi-3rdparty.git")
 sha256sums=(SKIP)
 
 pkgver() {
-  cd indi-3rdparty-master
+  cd indi-3rdparty
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
 }
 
@@ -25,19 +25,15 @@ prepare() {
 build() {
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Debug \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-        -DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-        -DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
-        -DQHY_FIRMWARE_INSTALL_DIR=/usr/lib/firmware \
         -DBUILD_LIBS=1 \
-        ../indi-3rdparty-master
+        ../indi-3rdparty
   make
 }
 
 package() {
   cd build
   make DESTDIR="$pkgdir" install
-  sed -e 's|/lib/firmware|/usr/lib/firmware|' -i "$pkgdir"/usr/lib/udev/rules.d/*.rules
-  sed -e 's|/usr/lib/firmware/qhy|/usr/lib/firmware|' -i "$pkgdir"/usr/lib/udev/rules.d/85-qhyccd.rules
-  sed -e 's|-D $env{DEVNAME}|-p $env{BUSNUM},$env{DEVNUM}|' -i "$pkgdir"/usr/lib/udev/rules.d/85-qhyccd.rules
+
 }

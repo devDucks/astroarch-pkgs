@@ -44,7 +44,7 @@ makedepends=(cmake
              eigen
              extra-cmake-modules
              kdoctools)
-source=("kstars::https://github.com/KDE/kstars/archive/refs/heads/master.zip")
+source=("kstars::git+https://github.com/KDE/kstars.git")
 sha256sums=(SKIP)
 
 pkgver() {
@@ -54,9 +54,10 @@ pkgver() {
 
 build() {
   cmake -B build -S kstars-master \
-	-DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=OFF \
-        -DBUILD_QT5=OFF \
+        -DBUILD_WITH_QT6=ON \
         -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
         -DCMAKE_CXX_FLAGS="$CXXFLAGS -ffat-lto-objects"
   cmake --build build
