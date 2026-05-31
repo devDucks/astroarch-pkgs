@@ -10,11 +10,11 @@ conflicts=(indi-3rdparty-drivers)
 license=('LGPLv2')
 depends=('indi-3rdparty-libs' 'limesuite' 'libdc1394' 'fxload' 'zeromq' 'urjtag' 'dfu-util' 'libxisf')
 makedepends=(cmake)
-source=("indi-3rdparty::https://github.com/indilib/indi-3rdparty/archive/refs/heads/master.zip")
+source=("indi-3rdparty::git+https://github.com/indilib/indi-3rdparty.git")
 sha256sums=(SKIP)
 
 pkgver() {
-  cd indi-3rdparty-master
+  cd indi-3rdparty
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
 }
 
@@ -25,22 +25,14 @@ prepare() {
 build() {
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
-	-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DSKIP_SETCAP=true \
-	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-	-DFIRMWARE_INSTALL_DIR=/usr/lib/firmware \
-	../indi-3rdparty-master
+        ../indi-3rdparty
   make
 }
 
 package() {
   cd build
   make DESTDIR="$pkgdir" install
-  mkdir -p "$pkgdir"/usr/lib/firmware
-  mv "$pkgdir"/lib/firmware/* "$pkgdir"/usr/lib/firmware
-  mv "$pkgdir"/lib/udev/rules.d/* "$pkgdir"/usr/lib/udev/rules.d
-  rmdir "$pkgdir/lib/udev/rules.d"
-  rmdir "$pkgdir/lib/udev"
-  rmdir "$pkgdir/lib/firmware"
-  rmdir "$pkgdir/lib"
 }
