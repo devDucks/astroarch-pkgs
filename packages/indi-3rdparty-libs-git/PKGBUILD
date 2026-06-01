@@ -8,8 +8,8 @@ conflicts=(indi-3rdparty-libs)
 arch=(x86_64 aarch64)
 url="https://indilib.org"
 license=('LGPLv2')
-depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber')
-makedepends=(cmake)
+depends=('libindi' 'ffmpeg' 'libgphoto2' 'pipewire-jack' 'wireplumber' 'libftdi' 'libraw' 'gpsd' 'cfitsio' 'libxisf')
+makedepends=('cmake' 'git')
 source=("indi-3rdparty::git+https://github.com/indilib/indi-3rdparty.git")
 sha256sums=(SKIP)
 

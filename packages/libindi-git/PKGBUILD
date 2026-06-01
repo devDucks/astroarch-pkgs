@@ -10,8 +10,8 @@ conflicts=(libindi)
 provides=(libindi)
 depends=('gpsd' 'gsl' 'libraw' 'libusb' 'zlib' 'libftdi' 'libjpeg-turbo' 'libuv' \
          'libnova' 'libtiff' 'fftw' 'rtl-sdr' 'libgphoto2' 'curl' 'libtheora' \
-	 'libev')
-makedepends=('cmake' 'boost')
+         'libev' 'cfitsio' 'libxisf' 'pipewire-jack')
+makedepends=('cmake' 'boost' 'git'  )
 source=("libindi::git+https://github.com/indilib/indi.git")
 sha256sums=(SKIP)
 

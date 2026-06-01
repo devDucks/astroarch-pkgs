@@ -8,8 +8,8 @@ url="https://indilib.org"
 provides=(indi-3rdparty-drivers)
 conflicts=(indi-3rdparty-drivers)
 license=('LGPLv2')
-depends=('indi-3rdparty-libs' 'limesuite' 'libdc1394' 'fxload' 'zeromq' 'urjtag' 'dfu-util' 'libxisf')
-makedepends=(cmake)
+depends=('indi-3rdparty-libs' 'limesuite' 'libdc1394' 'fxload' 'zeromq' 'urjtag' 'dfu-util' 'libxisf' 'libftdi' 'libraw' 'pipewire-jack' 'gpsd' 'cfitsio')
+makedepends=('cmake' 'git')
 source=("indi-3rdparty::git+https://github.com/indilib/indi-3rdparty.git")
 sha256sums=(SKIP)
 
