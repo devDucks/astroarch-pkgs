@@ -137,15 +137,45 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # ── fxload (AUR dep of both drivers jobs) ────────────────────────────────────
+  build-fxload:
+    name: "Build fxload [${{ matrix.arch }}]"
+    needs: detect
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 10
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build fxload
+        run: bash ci/build-package.sh fxload
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-fxload-${{ matrix.arch }}
+          path: packages/fxload/${{ matrix.pkg_glob }}
+          if-no-files-found: error
+          retention-days: 14
+
   # ── indi-3rdparty-drivers (stable): → indi-3rdparty-drivers ──────────────────
   build-indi-3rdparty-drivers:
     name: "Build indi-3rdparty-drivers [${{ matrix.arch }}]"
-    needs: [detect, build-libindi, build-indi-3rdparty-libs]
+    needs: [detect, build-libindi, build-indi-3rdparty-libs, build-fxload]
     if: |
       always() &&
       (needs.detect.outputs.has_libindi == 'true' || needs.detect.outputs.has_3rdparty_libs == 'true' || needs.detect.outputs.has_3rdparty_drivers == 'true') &&
       (needs.build-libindi.result == 'success' || needs.build-libindi.result == 'skipped') &&
-      (needs.build-indi-3rdparty-libs.result == 'success' || needs.build-indi-3rdparty-libs.result == 'skipped')
+      (needs.build-indi-3rdparty-libs.result == 'success' || needs.build-indi-3rdparty-libs.result == 'skipped') &&
+      (needs.build-fxload.result == 'success')
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
@@ -172,6 +202,12 @@ jobs:
         continue-on-error: true
         with:
           name: pkg-indi-3rdparty-libs-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download fxload artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-fxload-${{ matrix.arch }}
           path: /tmp/local-pkgs/
 
       - name: Build indi-3rdparty-drivers
@@ -262,12 +298,13 @@ jobs:
   # ── indi-3rdparty-drivers-git ─────────────────────────────────────────────────
   build-indi-3rdparty-drivers-git:
     name: "Build indi-3rdparty-drivers-git [${{ matrix.arch }}]"
-    needs: [detect, build-libindi-git, build-indi-3rdparty-libs-git]
+    needs: [detect, build-libindi-git, build-indi-3rdparty-libs-git, build-fxload]
     if: |
       always() &&
       (needs.detect.outputs.has_libindi_git == 'true' || needs.detect.outputs.has_3rdparty_libs_git == 'true' || needs.detect.outputs.has_3rdparty_drivers_git == 'true') &&
       (needs.build-libindi-git.result == 'success' || needs.build-libindi-git.result == 'skipped') &&
-      (needs.build-indi-3rdparty-libs-git.result == 'success' || needs.build-indi-3rdparty-libs-git.result == 'skipped')
+      (needs.build-indi-3rdparty-libs-git.result == 'success' || needs.build-indi-3rdparty-libs-git.result == 'skipped') &&
+      (needs.build-fxload.result == 'success')
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.arch_matrix) }}
@@ -294,6 +331,12 @@ jobs:
         continue-on-error: true
         with:
           name: pkg-indi-3rdparty-libs-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download fxload artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-fxload-${{ matrix.arch }}
           path: /tmp/local-pkgs/
 
       - name: Build indi-3rdparty-drivers-git
