@@ -210,6 +210,17 @@ jobs:
           name: pkg-fxload-${{ matrix.arch }}
           path: /tmp/local-pkgs/
 
+      - name: Install pigpio from AUR (aarch64 only)
+        if: matrix.arch == 'aarch64'
+        run: |
+          pacman -S --noconfirm --noprogressbar --needed git base-devel sudo
+          useradd -m aur-user
+          echo "aur-user ALL=(ALL) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/aur-user
+          chmod 0440 /etc/sudoers.d/aur-user
+          git clone https://aur.archlinux.org/pigpio.git /tmp/pigpio
+          chown -R aur-user:aur-user /tmp/pigpio
+          su - aur-user -c "cd /tmp/pigpio && makepkg -si --noconfirm --noprogressbar"
+
       - name: Build indi-3rdparty-drivers
         env:
           LOCAL_PKG_DIR: /tmp/local-pkgs
@@ -338,6 +349,17 @@ jobs:
         with:
           name: pkg-fxload-${{ matrix.arch }}
           path: /tmp/local-pkgs/
+
+      - name: Install pigpio from AUR (aarch64 only)
+        if: matrix.arch == 'aarch64'
+        run: |
+          pacman -S --noconfirm --noprogressbar --needed git base-devel sudo
+          useradd -m aur-user
+          echo "aur-user ALL=(ALL) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/aur-user
+          chmod 0440 /etc/sudoers.d/aur-user
+          git clone https://aur.archlinux.org/pigpio.git /tmp/pigpio
+          chown -R aur-user:aur-user /tmp/pigpio
+          su - aur-user -c "cd /tmp/pigpio && makepkg -si --noconfirm --noprogressbar"
 
       - name: Build indi-3rdparty-drivers-git
         env:

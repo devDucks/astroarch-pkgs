@@ -3,8 +3,8 @@
 # Contributor: Andrea Scarpino <andrea@archlinux.org>
 
 pkgname=kstars
-pkgver=3.8.2
-pkgrel=2
+pkgver=3.8.3
+pkgrel=1
 pkgdesc='Desktop Planetarium'
 url='https://kstars.kde.org/'
 arch=(x86_64 aarch64)
@@ -46,7 +46,7 @@ makedepends=(eigen
              kdoctools)
 optdepends=('xplanet: XPlanet support')
 source=(https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz)
-sha256sums=('aca3f662c06371c3eefcd553a3a687c94ba58a7ae460d0c63907f6cb9f69ced9')
+sha256sums=('c5ecfef89587710231e4c93e4d4781ae17276d0344e2da97df54fd6ed86a19d5')
 validpgpkeys=(259D9FCEE9175351965633696D9CE2AEE028C4F3) # Jasem Mutlaq <mutlaqja@ikarustech.com>
 
 build() {
