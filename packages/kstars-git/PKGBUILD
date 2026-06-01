@@ -39,11 +39,15 @@ depends=(breeze-icons
          qtkeychain-qt6
 	 stellarsolver
          xplanet
-         zlib)
+         zlib
+         libftdi
+         pipewire-jack
+         gpsd)
 makedepends=(cmake
              eigen
              extra-cmake-modules
-             kdoctools)
+             kdoctools
+             git)
 source=("kstars::git+https://github.com/KDE/kstars.git")
 sha256sums=(SKIP)
 
