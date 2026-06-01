@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=libindi
-pkgver=2.2.1.1
+pkgver=2.2.2
 pkgrel=1
 pkgdesc='Indi core library'
 arch=(x86_64 aarch64)
@@ -25,8 +25,8 @@ depends=(cfitsio
          zlib)
 makedepends=(boost
              cmake)
-source=(https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz)
-sha256sums=(270e0767768dcca6879d6a9f410ad6086b067ea492228c48e03ba3803c718271)
+source=(${pkgname}-${pkgver}::https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz)
+sha256sums=('e2069555088b70e118e491840180fe0ef85d12912c145f74dbc51e266dc1c8f2')
 
 build() {
   cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
