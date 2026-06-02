@@ -34,10 +34,11 @@ depends=(breeze-icons
          qt6-base
          qt6-datavis3d
          qt6-declarative
+         qt6-quick3d
          qt6-svg
          qt6-websockets
          qtkeychain-qt6
-	 stellarsolver
+         stellarsolver
          xplanet
          zlib
          libftdi
@@ -52,12 +53,12 @@ source=("kstars::git+https://github.com/KDE/kstars.git")
 sha256sums=(SKIP)
 
 pkgver() {
-  cd kstars-master
+  cd kstars
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
 }
 
 build() {
-  cmake -B build -S kstars-master \
+  cmake -B build -S kstars \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=OFF \
