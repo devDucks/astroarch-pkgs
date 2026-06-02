@@ -1,11 +1,13 @@
 # Maintainer: Mattia matto.astro@gmail.com
 pkgname=astroarch-bridge
-pkgver=0.3.15
+pkgver=0.3.16
 pkgrel=1
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
 url="https://github.com/Johannes1979I/astroarch-bridge"
 license=('MIT')
+# Post-installation script
+install=astroarch-bridge.install
 depends=(
     tk
     python-astropy

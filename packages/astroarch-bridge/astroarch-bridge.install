@@ -1,0 +1,58 @@
+# Installation file for the astronaut and astronaut-kiosk users
+
+post_install() {
+  USERS=("astronaut" "astronaut-kiosk")
+  PORTS=("8765" "8766")
+
+  for i in "${!USERS[@]}"; do
+    USERNAME="${USERS[$i]}"
+    PORT="${PORTS[$i]}"
+
+    # Check if the user exists
+    if ! id "$USERNAME" &>/dev/null; then
+      echo "==> The user $USERNAME does not exist, configuration ignored."
+      continue
+    fi
+
+    echo "==> Configuring astroarch-bridge for the user $USERNAME..."
+
+    HOME_DIR="/home/$USERNAME"
+
+    # 1. Folders
+    mkdir -p "$HOME_DIR/.config/astroarch-bridge"
+    mkdir -p "$HOME_DIR/Pictures/Ekos"
+
+    # 2. Enable the Systemd Linger
+    mkdir -p /var/lib/systemd/linger
+    touch "/var/lib/systemd/linger/${USERNAME}"
+
+    # 3. Network port (Systemd drop-in)
+    DROPIN_DIR="$HOME_DIR/.config/systemd/user/astroarch-bridge.service.d"
+    mkdir -p "$DROPIN_DIR"
+    cat <<EOF > "$DROPIN_DIR/override.conf"
+[Service]
+Environment=ASTROARCH_PORT=$PORT
+EOF
+
+    # 4. Desktop Shortcut
+    mkdir -p "$HOME_DIR/Desktop"
+    ln -sf /usr/share/astroarch-bridge/desktop_dashboard/AstroarchBridge.desktop \
+      "$HOME_DIR/Desktop/AstroarchBridge.desktop"
+
+    # 5. Enabling the default user service
+    WANTS_DIR="$HOME_DIR/.config/systemd/user/default.target.wants"
+    mkdir -p "$WANTS_DIR"
+    ln -sf /usr/lib/systemd/user/astroarch-bridge.service \
+           "$WANTS_DIR/astroarch-bridge.service"
+
+    chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/.config"
+    chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/Pictures/Ekos"
+
+    chown "$USERNAME":"$USERNAME" "$HOME_DIR/Desktop"
+    chown "$USERNAME":"$USERNAME" "$HOME_DIR/Desktop/AstroarchBridge.desktop"
+  done
+}
+
+post_upgrade() {
+  post_install
+}
