@@ -39,11 +39,6 @@ EOF
     ln -sf /usr/share/astroarch-bridge/desktop_dashboard/AstroarchBridge.desktop \
       "$HOME_DIR/Desktop/AstroarchBridge.desktop"
 
-    # 5. Enabling the default user service
-    WANTS_DIR="$HOME_DIR/.config/systemd/user/default.target.wants"
-    mkdir -p "$WANTS_DIR"
-    ln -sf /usr/lib/systemd/user/astroarch-bridge.service \
-           "$WANTS_DIR/astroarch-bridge.service"
 
     chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/.config"
     chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/Pictures/Ekos"
