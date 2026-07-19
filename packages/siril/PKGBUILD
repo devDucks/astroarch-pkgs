@@ -1,6 +1,6 @@
 pkgname=siril
 pkgver=1.4.2
-pkgrel=1
+pkgrel=2
 pkgdesc="An astronomical image processing software for Linux. (IRIS clone)"
 arch=('aarch64' 'x86_64')
 license=('GPL3')
@@ -16,7 +16,7 @@ depends=(cfitsio
          lcms2
          libgit2
          libheif
-         libjpeg
+         libjpeg-turbo
          libjxl
          libpng
          libraw
