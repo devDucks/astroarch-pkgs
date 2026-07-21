@@ -14,7 +14,7 @@ depends=(cfitsio
          vtk
          wxwidgets-common	 
          wxwidgets-gtk3)
-makedepends=(cmake eigen)
+makedepends=(cmake eigen opencv)
 source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('e5fdf91c9ba85589de0e3801af1c51a09b619fe7a10a2e46a5e9e3fb315cf336')
 

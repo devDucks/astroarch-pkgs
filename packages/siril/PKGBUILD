@@ -31,10 +31,12 @@ makedepends=(cmake
 optdepends=('ffmpeg: For AVI export')
 options=(!lto)
 
-source=("https://free-astro.org/download/siril-${pkgver}.tar.bz2")
-sha256sums=('b1682f2129d2e06b034445ed225766a06e38cfaa7451b92d606a3ee36eb077a4')
-source=('meson.build')
-sha256sums=('SKIP')
+source=("https://free-astro.org/download/siril-${pkgver}.tar.bz2"
+        'meson.build'
+)
+sha256sums=('b1682f2129d2e06b034445ed225766a06e38cfaa7451b92d606a3ee36eb077a4'
+            'SKIP'
+)
 
 # To be removed in the next version with OpenCV 5 #####
 prepare() {
