@@ -1,0 +1,236 @@
+name: Build AArch64 Packages
+
+on:
+  push:
+    branches:
+      - main
+      - workflows
+    paths:
+      - 'packages/**/PKGBUILD'
+      - 'packages/**/*.install'
+      - 'packages/**/*.patch'
+      - 'packages/**/src/**'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Name of the package to force (e.g., indi-core); leave blank to detect automatically'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-repo
+  cancel-in-progress: false
+
+jobs:
+  # ─── Step 1: Detect modified packages & Sort them ──────────────────────────
+  detect-changes:
+    name: Detect modified packages
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect and order packages
+        id: detect
+        run: |
+          if [[ -n "${{ github.event.inputs.package }}" ]]; then
+            PKG="${{ github.event.inputs.package }}"
+            if [[ ! -d "packages/$PKG" ]]; then
+              echo "❌ The package '$PKG' does not exist in packages/"
+              exit 1
+            fi
+            PKGS_JSON=$(echo "$PKG" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          else
+            if git rev-parse HEAD~1 &>/dev/null; then
+              BASE="HEAD~1"
+            else
+              BASE="$(git hash-object -t tree /dev/null)"
+            fi
+
+            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD \
+              | { grep '^packages/' || true; } \
+              | awk -F/ '{print $2}' \
+              | sort -u \
+              | { grep -v '^$' || true; })
+
+            if [[ -z "$CHANGED_DIRS" ]]; then
+              echo "No modified packages detected"
+              echo "has_changes=false" >> "$GITHUB_OUTPUT"
+              echo "packages=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            # ─── CRITICAL PART: Sort packages by dependency order ───
+            # Define your hardcoded build order here.
+            # Packages listed first will be built first if they are in the changed list.
+            ORDER=("cmake-python-distributions" "libindi" "libindi-git" "indi-3rdparty-libs" \
+                    "indi-3rdparty-libs-git" "indi-3rdparty-drivers" "indi-3rdparty-drivers-git" \
+                    "stellarsolver" "kstars" "kstars-git" "libcamera" "rpicam-apps")
+
+            SORTED_PKGS=()
+            # First, add modified packages that match our strict order
+            for pkg in "${ORDER[@]}"; do
+              if echo "$CHANGED_DIRS" | grep -q "^${pkg}$"; then
+                SORTED_PKGS+=("$pkg")
+              fi
+            done
+
+            # Second, add any other modified packages not explicitly in the order list
+            for pkg in $CHANGED_DIRS; do
+              if [[ ! " ${ORDER[*]} " =~ " ${pkg} " ]]; then
+                SORTED_PKGS+=("$pkg")
+              fi
+            done
+
+            # Convert array to JSON
+            PKGS_JSON=$(printf '%s\n' "${SORTED_PKGS[@]}" | jq -R . | jq -s -c '.')
+          fi
+
+          echo "Sorted packages to build: $PKGS_JSON"
+          echo "packages=$PKGS_JSON" >> "$GITHUB_OUTPUT"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+  # ─── Step 2: Build packages sequentially ────────────────────────────────────
+  build:
+    name: Build Packages Sequentially
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for aarch64
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Run Sequential Build Build inside Docker
+        run: |
+          # Convert JSON array back to a Bash array
+          PKGS=$(echo '${{ needs.detect-changes.outputs.packages }}' | jq -r '.[]')
+
+          # Prepare a shared local directory inside the workspace to store built packages
+          # This acts as a temporary local repository during the workflow run
+          LOCAL_REPO="${{ github.workspace }}/local_repo"
+          mkdir -p "$LOCAL_REPO"
+
+          for PKG in $PKGS; do
+            echo "──────────────────────────────────────────────────────────"
+            echo "▶️ Processing package: $PKG"
+            echo "──────────────────────────────────────────────────────────"
+
+            if [[ ! -f "packages/$PKG/PKGBUILD" ]]; then
+              echo "❌ No PKGBUILD found in packages/$PKG/, skipping."
+              continue
+            fi
+
+            # Check architecture compatibility before spinning up Docker
+            ARCHS=$(bash -c "source packages/$PKG/PKGBUILD; echo \"\${arch[@]}\"")
+            if [[ ! " $ARCHS " =~ " aarch64 " ]] && [[ ! " $ARCHS " =~ " any " ]]; then
+              echo "⚠️ $PKG is only configured for '$ARCHS' (not aarch64). Skipping."
+              continue
+            fi
+
+            echo "🏭 Starting containerized build for $PKG..."
+
+            # We mount the full packages directory and the local_repo inside Docker
+            docker run --rm \
+              --platform linux/arm64 \
+              -v "${{ github.workspace }}/packages/$PKG:/workspace" \
+              -v "$LOCAL_REPO:/local_repo" \
+              -w /workspace \
+              ghcr.io/devducks/archlinuxarm:latest \
+              bash -c '
+                set -euo pipefail
+
+                echo "==> Initializing pacman keys..."
+                pacman-key --init
+                pacman-key --populate archlinuxarm
+
+                echo "==> Configuring pacman (SigLevel + custom repo)..."
+                sed -i "/SigLevel/d" /etc/pacman.conf
+                sed -i "/\[options\]/a SigLevel = Never" /etc/pacman.conf
+                printf "\n[astromatto]\nServer = http://astroarch.astromatto.com:9000/\$arch\n" >> /etc/pacman.conf
+
+                echo "==> Updating system..."
+                pacman -Syu --noconfirm
+
+                echo "==> Installing dependencies and core libraries..."
+                pacman -Syu --noconfirm base-devel sudo libftdi libraw
+
+                echo "==> Setting up builder user..."
+                useradd -m builder
+                echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+                chown -R builder:builder /workspace
+                chown -R builder:builder /local_repo
+
+                # CRITICAL: If previous packages were built in this run, install them first
+                # so makepkg can resolve the dependencies local to this commit.
+                if [ "$(ls -A /local_repo/*.pkg.tar.* 2>/dev/null)" ]; then
+                  echo "==> Installing locally built dependencies from this workflow run..."
+                  pacman -U --noconfirm /local_repo/*.pkg.tar.*
+                fi
+
+                echo "==> Running makepkg build..."
+                cd /workspace
+                sudo -u builder makepkg -s --noconfirm --nocheck --log
+
+                echo "==> Copying built artifact to shared local repository..."
+                cp *.pkg.tar.* /local_repo/ 2>/dev/null || true
+              '
+          done
+
+      - name: Upload all built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-packages-aarch64
+          path: packages/**/*.pkg.tar.*
+          if-no-files-found: error
+          retention-days: 14
+
+#  # ─── Step 3: Deploy to the Pacman repository ────────────────────────────────
+#  deploy:
+#    name: Deploy to Pacman repository
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Download all artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: dist/
+
+#      - name: List packages to deploy
+#        run: |
+#          find dist/ -name "*.pkg.tar.*" | sort
+
+#      - name: Deploy via SCP and rebuild repo database
+#        env:
+#          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+#          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+#          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+#          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+#        run: |
+#          echo "$DEPLOY_KEY" > /tmp/deploy_key
+#          chmod 600 /tmp/deploy_key
+#          SSH_OPTS="-i /tmp/deploy_key -o StrictHostKeyChecking=no"
+
+#          find dist/ -name "*.pkg.tar.*" | while read pkg; do
+#            echo "-> Sending $(basename $pkg)..."
+#            scp $SSH_OPTS "$pkg" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/aarch64/"
+#          done
+
+#          ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" bash << 'EOF'
+#            set -euo pipefail
+#            cd "${DEPLOY_PATH}/aarch64"
+#            repo-add --remove astromatto.db.tar.gz *.pkg.tar.*
+#            echo "✅ Database updated"
+#          EOF
+
+#          rm -f /tmp/deploy_key
