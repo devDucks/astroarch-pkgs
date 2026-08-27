@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=rpicam-apps
-pkgver=1.12.0
+pkgver=1.13.0
 pkgrel=1
 pkgdesc="This is a small suite of libcamera-based applications to drive the cameras on a Raspberry Pi platform."
 arch=(aarch64)
@@ -22,7 +22,7 @@ makedepends=(meson
              python-jinja
              python-sphinx)
 source=("https://github.com/raspberrypi/rpicam-apps/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('6e47f02b05ff38e19e8b9d44299ad86575c9bcd9c3a99a7cad041f5dcc923e84')
+sha256sums=('470b12bf3b96180a972e0d11beb18a41084fef3191604fb2fe3e0b3123b95fef')
 
 # paru python-pidng-git kmsxx-git
 build() {
