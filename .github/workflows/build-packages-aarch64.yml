@@ -19,13 +19,11 @@ jobs:
     container:
       image: archlinux:latest
     outputs:
-      pkgs_no_dep:         ${{ steps.classify.outputs.pkgs_no_dep }}
-      has_cmake_dep:       ${{ steps.classify.outputs.has_cmake_dep }}
-      has_needs_cmake:     ${{ steps.classify.outputs.has_needs_cmake }}
-      has_libtiff5_dep:    ${{ steps.classify.outputs.has_libtiff5_dep }}
-      has_needs_libtiff5:  ${{ steps.classify.outputs.has_needs_libtiff5 }}
-      needs_libcamera:     ${{ steps.classify.outputs.needs_libcamera }}
-      has_rpicam:          ${{ steps.classify.outputs.has_rpicam }}
+      pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
+      has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
+      has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
+      needs_libcamera: ${{ steps.classify.outputs.needs_libcamera }}
+      has_rpicam:      ${{ steps.classify.outputs.has_rpicam }}
     steps:
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
@@ -101,70 +99,6 @@ jobs:
         with:
           name: pkg-simplejpeg
           path: packages/simplejpeg/*.pkg.tar.xz
-          retention-days: 14
-
-  # ── Job 3b: build libtiff5 first (if changed) ─────────────────────────────
-  # libtiff5 is not available in Arch's official repos; phd2 depends on it.
-  build-libtiff5:
-    name: Build libtiff5
-    needs: detect
-    if: needs.detect.outputs.has_libtiff5_dep == 'true'
-    runs-on: [self-hosted]
-    container:
-      image: ghcr.io/devducks/archlinuxarm:latest
-    timeout-minutes: 30
-    steps:
-      - name: bootstrap
-        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
-      - uses: actions/checkout@v4
-
-      - name: Build libtiff5
-        run: bash ci/build-package.sh libtiff5
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-libtiff5
-          path: packages/libtiff5/*.pkg.tar.xz
-          retention-days: 14
-
-  # ── Job 3c: build phd2 after libtiff5 ─────────────────────────────────────
-  # "skipped" upstream jobs are treated as success, so this job still runs
-  # when only phd2 changed (job 3b was skipped).
-  build-phd2:
-    name: Build phd2
-    needs:
-      - detect
-      - build-libtiff5
-    if: needs.detect.outputs.has_needs_libtiff5 == 'true'
-    runs-on: [self-hosted]
-    container:
-      image: ghcr.io/devducks/archlinuxarm:latest
-    timeout-minutes: 60
-    steps:
-      - name: bootstrap
-        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
-      - uses: actions/checkout@v4
-
-      # Present only when libtiff5 was rebuilt in this run.
-      # continue-on-error so the step is silently skipped when absent.
-      - name: Download libtiff5 artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: pkg-libtiff5
-          path: /tmp/local-pkgs/
-
-      - name: Build phd2
-        env:
-          LOCAL_PKG_DIR: /tmp/local-pkgs
-        run: bash ci/build-package.sh phd2
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg-phd2
-          path: packages/phd2/*.pkg.tar.xz
           retention-days: 14
 
   # ── Job 4: build libcamera first (if changed) ────────────────────────────

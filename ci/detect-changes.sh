@@ -26,9 +26,6 @@ AARCH64_ONLY=(
 # ── cmake-python-distributions must be built before simplejpeg ───────────────
 CMAKE_DEP_DIR="cmake-python-distributions"
 
-# ── libtiff5 must be built before phd2 (not available in Arch repos) ─────────
-LIBTIFF5_DEP_DIR="libtiff5"
-
 # ── INDI and KStars dependency chains (built sequentially, uploaded together) ─
 # Stable:  libindi → indi-3rdparty-libs → indi-3rdparty-drivers
 # Git:     libindi-git → indi-3rdparty-libs-git → indi-3rdparty-drivers-git
@@ -81,8 +78,6 @@ if [[ -n "$OVERRIDE" ]]; then
     kstars-git)
       CHANGED_PKGS+=(stellarsolver)
       has_kstars_git_libindi=true ;;
-    phd2)
-      CHANGED_PKGS+=(libtiff5) ;;
   esac
 else
     # Determine base commit for the diff.
@@ -129,8 +124,6 @@ fi
 pkgs_no_dep=()
 has_cmake_dep=false
 has_needs_cmake=false
-has_libtiff5_dep=false
-has_needs_libtiff5=false
 has_libindi=false
 has_3rdparty_libs=false
 has_3rdparty_drivers=false
@@ -152,8 +145,6 @@ for pkg in "${CHANGED_PKGS[@]}"; do
   case "$pkg" in
     "$CMAKE_DEP_DIR")         has_cmake_dep=true ;;
     simplejpeg)               has_needs_cmake=true ;;
-    "$LIBTIFF5_DEP_DIR")      has_libtiff5_dep=true ;;
-    phd2)                     has_needs_libtiff5=true ;;
     libindi)                  has_libindi=true ;;
     indi-3rdparty-libs)       has_3rdparty_libs=true ;;
     indi-3rdparty-drivers)    has_3rdparty_drivers=true ;;
@@ -180,8 +171,6 @@ echo "=== CI package classification (x86_64) ==="
 echo "  Regular packages (matrix):        ${PKG_NO_DEP_JSON}"
 echo "  cmake-python-distributions:       ${has_cmake_dep}"
 echo "  simplejpeg (needs cmake first):   ${has_needs_cmake}"
-echo "  libtiff5:                         ${has_libtiff5_dep}"
-echo "  phd2 (needs libtiff5 first):      ${has_needs_libtiff5}"
 echo "  libindi:                          ${has_libindi}"
 echo "  indi-3rdparty-libs:               ${has_3rdparty_libs}"
 echo "  indi-3rdparty-drivers:            ${has_3rdparty_drivers}"
@@ -199,8 +188,6 @@ echo "  kstars_git_libindi (prereq only): ${has_kstars_git_libindi}"
   echo "pkgs_no_dep=${PKG_NO_DEP_JSON}"
   echo "has_cmake_dep=${has_cmake_dep}"
   echo "has_needs_cmake=${has_needs_cmake}"
-  echo "has_libtiff5_dep=${has_libtiff5_dep}"
-  echo "has_needs_libtiff5=${has_needs_libtiff5}"
   echo "has_libindi=${has_libindi}"
   echo "has_3rdparty_libs=${has_3rdparty_libs}"
   echo "has_3rdparty_drivers=${has_3rdparty_drivers}"
