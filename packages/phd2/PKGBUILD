@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=phd2
 pkgver=2.6.14
-pkgrel=2
+pkgrel=3
 pkgdesc="OpenPHDGuiding"
 arch=(x86_64 aarch64)
 url="https://openphdguiding.org/"
@@ -15,8 +15,8 @@ depends=(cfitsio
          wxwidgets-common	 
          wxwidgets-gtk3)
 makedepends=(cmake eigen opencv)
-source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('e5fdf91c9ba85589de0e3801af1c51a09b619fe7a10a2e46a5e9e3fb315cf336')
+source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v${pkgver}dev1.tar.gz")
+sha256sums=('178351bfc0a5bfa9fa14202c495fb2c6ba3868b814353b26edaa6a929177701e')
 
 prepare() {
   mkdir -p build
@@ -26,7 +26,7 @@ prepare() {
         -DUSE_SYSTEM_LIBUSB=ON \
         -DUSE_SYSTEM_GTEST=ON \
         -DEIGEN_SRC=/usr/include/eigen3 \
-        ../phd2-$pkgver
+        ../phd2-${pkgver}dev1
 }
 
 build() {
