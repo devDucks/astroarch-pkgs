@@ -9,6 +9,7 @@ license=('LGPL')
 depends=(cfitsio
          curl
          hdf5
+         libindi
          libnova
          libtiff
          vtk

@@ -17,6 +17,9 @@ X86_64_ONLY=(
 # ── cmake-python-distributions must be built before simplejpeg ───────────────
 CMAKE_DEP_DIR="cmake-python-distributions"
 
+# ── libindi must be built before phd2 (not available in Arch repos) ──────────
+LIBINDI_DEP_DIR="libindi"
+
 # ── INDI and KStars dependency chains (built sequentially, uploaded together) ─
 # Stable:  libindi → indi-3rdparty-libs → indi-3rdparty-drivers
 # Git:     libindi-git → indi-3rdparty-libs-git → indi-3rdparty-drivers-git
@@ -70,7 +73,9 @@ if [[ -n "$OVERRIDE" ]]; then
       CHANGED_PKGS+=(stellarsolver)
       has_kstars_git_libindi=true ;;
     rpicam-apps)
-      CHANGED_PKGS+=(libcamera)
+      CHANGED_PKGS+=(libcamera) ;;
+    phd2)
+      CHANGED_PKGS+=(libindi) ;;
   esac
 else
     # Determine base commit for the diff.
@@ -117,6 +122,7 @@ fi
 pkgs_no_dep=()
 has_cmake_dep=false
 has_needs_cmake=false
+has_needs_libindi=false
 has_libindi=false
 has_3rdparty_libs=false
 has_3rdparty_drivers=false
@@ -140,7 +146,8 @@ for pkg in "${CHANGED_PKGS[@]}"; do
   case "$pkg" in
     "$CMAKE_DEP_DIR")         has_cmake_dep=true ;;
     simplejpeg)               has_needs_cmake=true ;;
-    libindi)                  has_libindi=true ;;
+    "$LIBINDI_DEP_DIR")       has_libindi=true ;;
+    phd2)                     has_needs_libindi=true ;;
     indi-3rdparty-libs)       has_3rdparty_libs=true ;;
     indi-3rdparty-drivers)    has_3rdparty_drivers=true ;;
     libindi-git)              has_libindi_git=true ;;
@@ -169,6 +176,7 @@ echo "  Regular packages (matrix):        ${PKG_NO_DEP_JSON}"
 echo "  cmake-python-distributions:       ${has_cmake_dep}"
 echo "  simplejpeg (needs cmake first):   ${has_needs_cmake}"
 echo "  libindi:                          ${has_libindi}"
+echo "  phd2 (needs libindi first):       ${has_needs_libindi}"
 echo "  indi-3rdparty-libs:               ${has_3rdparty_libs}"
 echo "  indi-3rdparty-drivers:            ${has_3rdparty_drivers}"
 echo "  libindi-git:                      ${has_libindi_git}"
@@ -188,6 +196,7 @@ echo "  rpicam-apps (needs libcamera):    ${has_rpicam}"
   echo "has_cmake_dep=${has_cmake_dep}"
   echo "has_needs_cmake=${has_needs_cmake}"
   echo "has_libindi=${has_libindi}"
+  echo "has_needs_libindi=${has_needs_libindi}"
   echo "has_3rdparty_libs=${has_3rdparty_libs}"
   echo "has_3rdparty_drivers=${has_3rdparty_drivers}"
   echo "has_libindi_git=${has_libindi_git}"
