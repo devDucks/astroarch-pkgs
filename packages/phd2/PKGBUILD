@@ -10,7 +10,7 @@ depends=(cfitsio
          curl
          hdf5
          libnova
-         libtiff5
+         libtiff
          vtk
          wxwidgets-common	 
          wxwidgets-gtk3)
