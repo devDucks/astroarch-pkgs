@@ -1,6 +1,10 @@
 # Maintainer: Mattia matto.astro@gmail.com
 pkgname=astroarch-bridge
+<<<<<<< Updated upstream
 pkgver=0.3.16
+=======
+pkgver=0.3.19
+>>>>>>> Stashed changes
 pkgrel=1
 pkgdesc="Backend daemon per Astroarch Interface Android app - clone live INDI/Ekos/PHD2"
 arch=('any')
@@ -28,7 +32,7 @@ optdepends=(
     'tailscale: remote access and QR pairing with Tailscale IP detection'
 )
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Johannes1979I/astroarch-bridge/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=(9a3022a6fab6977bbae08c9da884d5268ec522fb99d007675501ac3d31b20385)
+sha256sums=(f1d78d49aba9fe6a2ca7378638848f2c74af288ec7bcf582dda350ae618a693f)
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
