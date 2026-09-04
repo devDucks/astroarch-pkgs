@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=libindi
-pkgver=2.2.2
-pkgrel=1
+pkgver=2.2.4.2
+pkgrel=2
 pkgdesc='Indi core library'
 arch=(x86_64 aarch64)
 url='https://github.com/indilib/indi'
@@ -26,14 +26,16 @@ depends=(cfitsio
 makedepends=(boost
              cmake)
 source=(${pkgname}-${pkgver}::https://github.com/indilib/indi/archive/refs/tags/v$pkgver.tar.gz)
-sha256sums=('e2069555088b70e118e491840180fe0ef85d12912c145f74dbc51e266dc1c8f2')
+sha256sums=('025bf3d5e4edebae86851d3a5d66ba4596a2c3a49f861f7c49d99b421dadf102')
 
 build() {
   cmake -B $srcdir/build -DCMAKE_INSTALL_PREFIX=/usr \
 	-DUDEVRULES_INSTALL_DIR=/usr/lib/udev/rules.d \
-    	-DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+    -DCMAKE_C_FLAGS="$CFLAGS -ffat-lto-objects" \
+    -DCMAKE_CXX_FLAGS="-Wno-error=stringop-truncation" \
+    -DCMAKE_C_FLAGS="-Wno-error=stringop-truncation" \
 	-DCMAKE_CXX_FLAGS="$CXX_FLAGS -ffat-lto-objects -Wp,-U_GLIBCXX_ASSERTIONS" \
-    	indi-$pkgver
+    indi-$pkgver
   cmake --build $srcdir/build
 }
 
