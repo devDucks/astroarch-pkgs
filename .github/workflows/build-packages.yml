@@ -19,9 +19,11 @@ jobs:
     container:
       image: archlinux:latest
     outputs:
-      pkgs_no_dep:     ${{ steps.classify.outputs.pkgs_no_dep }}
-      has_cmake_dep:   ${{ steps.classify.outputs.has_cmake_dep }}
-      has_needs_cmake: ${{ steps.classify.outputs.has_needs_cmake }}
+      pkgs_no_dep:         ${{ steps.classify.outputs.pkgs_no_dep }}
+      has_cmake_dep:       ${{ steps.classify.outputs.has_cmake_dep }}
+      has_needs_cmake:     ${{ steps.classify.outputs.has_needs_cmake }}
+      has_libindi_dep:     ${{ steps.classify.outputs.has_libindi }}
+      has_needs_libindi:   ${{ steps.classify.outputs.has_needs_libindi }}
     steps:
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
@@ -93,6 +95,66 @@ jobs:
         with:
           name: pkg-simplejpeg
           path: packages/simplejpeg/*.pkg.tar.zst
+          retention-days: 14
+
+  # ── Job 3b: build libindi first (if changed) ──────────────────────────────
+  # libindi is not available in Arch's official repos; phd2 depends on it.
+  build-libindi:
+    name: Build libindi
+    needs: detect
+    if: needs.detect.outputs.has_libindi_dep == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build libindi
+        run: bash ci/build-package.sh libindi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libindi
+          path: packages/libindi/*.pkg.tar.zst
+          retention-days: 14
+
+  # ── Job 3c: build phd2 after libindi ──────────────────────────────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only phd2 changed (job 3b was skipped).
+  build-phd2:
+    name: Build phd2
+    needs:
+      - detect
+      - build-libindi
+    if: needs.detect.outputs.has_needs_libindi == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # Present only when libindi was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download libindi artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi
+          path: /tmp/local-pkgs/
+
+      - name: Build phd2
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh phd2
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-phd2
+          path: packages/phd2/*.pkg.tar.zst
           retention-days: 14
 
   # ── Job 4: matrix build for all other packages ───────────────────────────
