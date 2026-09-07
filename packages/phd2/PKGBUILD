@@ -20,6 +20,12 @@ source=("https://github.com/OpenPHDGuiding/phd2/archive/refs/tags/v${pkgver}dev1
 sha256sums=('178351bfc0a5bfa9fa14202c495fb2c6ba3868b814353b26edaa6a929177701e')
 
 prepare() {
+  cd phd2-$pkgver
+  sed -i '/^#  define OPENCV_CAMERA$/d' src/cameras.h
+  sed -i 's/^  find_package( OpenCV REQUIRED )$//; \
+    s/^  target_link_libraries(phd2 X11 ${OpenCV_LIBS})$/  target_link_libraries(phd2 X11)/' \
+      CMakeLists.txt
+  cd ..
   mkdir -p build
   cd build
   cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
