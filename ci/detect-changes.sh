@@ -82,7 +82,7 @@ if [[ -n "$OVERRIDE" ]]; then
       CHANGED_PKGS+=(stellarsolver)
       has_kstars_git_libindi=true ;;
     phd2)
-      CHANGED_PKGS+=(libindi) ;;
+      CHANGED_PKGS+=(indi-3rdparty-libs libindi) ;;
   esac
 else
     # Determine base commit for the diff.

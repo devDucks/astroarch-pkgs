@@ -24,6 +24,7 @@ jobs:
       has_needs_cmake:     ${{ steps.classify.outputs.has_needs_cmake }}
       has_libindi_dep:     ${{ steps.classify.outputs.has_libindi }}
       has_needs_libindi:   ${{ steps.classify.outputs.has_needs_libindi }}
+      has_3rdparty_libs:   ${{ steps.classify.outputs.has_3rdparty_libs }}
     steps:
       - name: Install git
         run: pacman -Sy --noconfirm --noprogressbar git
@@ -120,14 +121,52 @@ jobs:
           path: packages/libindi/*.pkg.tar.zst
           retention-days: 14
 
-  # ── Job 3c: build phd2 after libindi ──────────────────────────────────────
+  # ── Job 3c: build indi-3rdparty-libs after libindi (if needed for phd2) ──
   # "skipped" upstream jobs are treated as success, so this job still runs
   # when only phd2 changed (job 3b was skipped).
+  build-indi-3rdparty-libs:
+    name: Build indi-3rdparty-libs
+    needs:
+      - detect
+      - build-libindi
+    if: needs.detect.outputs.has_3rdparty_libs == 'true'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # Present only when libindi was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download libindi artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-libindi
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-libs
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-libs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-libs
+          path: packages/indi-3rdparty-libs/*.pkg.tar.zst
+          retention-days: 14
+
+  # ── Job 3d: build phd2 after libindi + indi-3rdparty-libs ─────────────────
+  # "skipped" upstream jobs are treated as success, so this job still runs
+  # when only phd2 changed (jobs 3b/3c were skipped).
   build-phd2:
     name: Build phd2
     needs:
       - detect
       - build-libindi
+      - build-indi-3rdparty-libs
     if: needs.detect.outputs.has_needs_libindi == 'true'
     runs-on: ubuntu-latest
     container:
@@ -143,6 +182,15 @@ jobs:
         continue-on-error: true
         with:
           name: pkg-libindi
+          path: /tmp/local-pkgs/
+
+      # Present only when indi-3rdparty-libs was rebuilt in this run.
+      # continue-on-error so the step is silently skipped when absent.
+      - name: Download indi-3rdparty-libs artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pkg-indi-3rdparty-libs
           path: /tmp/local-pkgs/
 
       - name: Build phd2
