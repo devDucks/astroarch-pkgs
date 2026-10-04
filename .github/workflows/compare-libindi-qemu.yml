@@ -1,0 +1,42 @@
+name: "[Comparison] Build libindi via QEMU (aarch64 on x64 runner)"
+
+# One-off comparison workflow: builds libindi under aarch64 QEMU emulation on
+# a standard (free) ubuntu-latest runner, so its timing/success can be
+# compared against the native self-hosted ARM run in build-packages-aarch64.yml.
+# Not wired into the normal CI paths trigger — dispatch manually.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-libindi-qemu:
+    name: Build libindi (qemu aarch64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Build libindi in emulated arm64 container
+        run: |
+          docker run --rm --platform=linux/arm64 \
+            -v "${{ github.workspace }}:/workspace" -w /workspace \
+            ghcr.io/devducks/archlinuxarm:latest \
+            bash -c "
+              pacman-key --init &&
+              pacman-key --populate archlinuxarm &&
+              pacman -Syu --noconfirm &&
+              bash ci/build-package.sh libindi
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libindi-qemu
+          path: packages/libindi/*.pkg.tar.xz
+          if-no-files-found: error
+          retention-days: 14

@@ -75,7 +75,7 @@ if [[ -n "$OVERRIDE" ]]; then
     rpicam-apps)
       CHANGED_PKGS+=(libcamera) ;;
     phd2)
-      CHANGED_PKGS+=(libindi) ;;
+      CHANGED_PKGS+=(indi-3rdparty-libs libindi) ;;
   esac
 else
     # Determine base commit for the diff.

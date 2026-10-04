@@ -1,0 +1,25 @@
+# Maintainer: Matteo Beretta <matteo at trendupgraphic dot com>
+pkgname=indi-wheelly
+pkgver=0.1.1
+pkgrel=1
+pkgdesc='INDI driver for Wheelly, an open-hardware motorised filter wheel'
+arch=(x86_64 aarch64)
+url='https://github.com/teoteo/Wheelly'
+license=(LGPL-2.1-or-later)
+depends=(libindi)
+makedepends=(cmake pkgconf)
+source=("Wheelly-$pkgver.tar.gz::https://github.com/teoteo/Wheelly/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=(116bc15452cb1772d5ccae6ecf73a782d0fde0ddb2661daeec3eb894a55c1ae3)
+
+build() {
+  cmake -B build -S Wheelly-$pkgver/driver/indi-wheelly \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=None
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 Wheelly-$pkgver/LICENSES/LGPL-2.1-or-later.txt \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
