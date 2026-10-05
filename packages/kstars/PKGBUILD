@@ -50,12 +50,6 @@ source=(https://download.kde.org/stable/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz
 sha256sums=('18f578944bfba800f7091aef83550d898e0c36bddfe2969f7bb87807df60e5b3')
 validpgpkeys=(259D9FCEE9175351965633696D9CE2AEE028C4F3) # Jasem Mutlaq <mutlaqja@ikarustech.com>
 
-# To be removed in the next version with OpenCV 5 #####
-prepare() {
-  curl -o $pkgname-$pkgver/CMakeLists.txt https://raw.githubusercontent.com/KDE/kstars/refs/heads/master/CMakeLists.txt
-}
-######
-
 build() {
   cmake -B build -S $pkgname-$pkgver \
     -DBUILD_TESTING=OFF \
