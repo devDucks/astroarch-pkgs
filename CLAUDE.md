@@ -50,7 +50,6 @@ astroarch-pkgs/
 | `indiserver-ui` | INDI server management UI |
 | `indiwebmanager` | Web-based INDI server manager |
 | `pylibcamera` | Python INDI driver for Raspberry Pi cameras |
-| `indi-wheelly` | INDI driver for the Wheelly motorised filter wheel |
 
 ### Raspberry Pi / Camera Support
 | Package | Description |
