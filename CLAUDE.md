@@ -84,6 +84,7 @@ astroarch-pkgs/
 | `collimation-circles` | Telescope collimation aid |
 | `fire_capture` | Planetary/solar capture tool |
 | `rustdesk-bin` | Remote desktop (aarch64 prebuilt binary) |
+| `tigervnc` | Arch's TigerVNC plus a w0vncserver fix for virtual outputs (drop when upstream fixes TigerVNC#2188) |
 | `ckbcomp` | XKB keyboard compiler |
 | `fxload` | Firmware loader for USB devices |
 

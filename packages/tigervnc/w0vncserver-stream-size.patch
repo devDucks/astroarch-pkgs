@@ -1,0 +1,195 @@
+w0vncserver: start the PipeWire stream at the size the portal reports
+
+PipeWireStream offers the video size as a range with 1280x720 as the
+default. A fixed-size output ignores the default, but KWin resizes a
+virtual output to the consumer's default, so the headless kiosk session
+dropped to 1280x720 as soon as a VNC client connected. The portal's Start
+response carries each stream's size; use it as the default and keep
+1280x720 only when the portal doesn't report one.
+
+Upstream issue: https://github.com/TigerVNC/tigervnc/issues/2188
+
+diff --git a/unix/w0vncserver/pipewire/PipeWirePixelBuffer.cxx b/unix/w0vncserver/pipewire/PipeWirePixelBuffer.cxx
+index 2c639b9..e64aec8 100644
+--- a/unix/w0vncserver/pipewire/PipeWirePixelBuffer.cxx
++++ b/unix/w0vncserver/pipewire/PipeWirePixelBuffer.cxx
+@@ -54,8 +54,9 @@ static core::LogWriter vlog("PipewirePixelBuffer");
+ 
+ PipeWirePixelBuffer::PipeWirePixelBuffer(int32_t pipewireFd,
+                                          uint32_t pipewireId,
++                                         int width, int height,
+                                          rfb::VNCServer* server_)
+-  : PipeWireStream(pipewireFd, pipewireId), server(server_),
++  : PipeWireStream(pipewireFd, pipewireId, width, height), server(server_),
+     lastSequence(0)
+ {
+   cursor = new PipeWireCursor();
+diff --git a/unix/w0vncserver/pipewire/PipeWirePixelBuffer.h b/unix/w0vncserver/pipewire/PipeWirePixelBuffer.h
+index 5f0a968..65c8d16 100644
+--- a/unix/w0vncserver/pipewire/PipeWirePixelBuffer.h
++++ b/unix/w0vncserver/pipewire/PipeWirePixelBuffer.h
+@@ -33,7 +33,7 @@ class PipeWirePixelBuffer : public rfb::ManagedPixelBuffer,
+                             public PipeWireStream {
+ public:
+   PipeWirePixelBuffer(int32_t pipewireFd, uint32_t pipewireId,
+-                      rfb::VNCServer* server);
++                      int width, int height, rfb::VNCServer* server);
+   ~PipeWirePixelBuffer();
+ 
+ private:
+diff --git a/unix/w0vncserver/pipewire/PipeWireStream.cxx b/unix/w0vncserver/pipewire/PipeWireStream.cxx
+index 2df7988..a370b8a 100644
+--- a/unix/w0vncserver/pipewire/PipeWireStream.cxx
++++ b/unix/w0vncserver/pipewire/PipeWireStream.cxx
+@@ -61,7 +61,8 @@ const pw_stream_events PipeWireStream::streamEventsHandler {
+ #endif
+ };
+ 
+-PipeWireStream::PipeWireStream(int pipeWireFd_, int nodeId)
++PipeWireStream::PipeWireStream(int pipeWireFd_, int nodeId, int width,
++                               int height)
+   : pipeWireFd(pipeWireFd_)
+ {
+   source = new PipeWireSource();
+@@ -71,7 +72,7 @@ PipeWireStream::PipeWireStream(int pipeWireFd_, int nodeId)
+   if (!core)
+     throw std::runtime_error("Failed to connect to PipeWire FD");
+ 
+-  start(nodeId);
++  start(nodeId, width, height);
+ }
+ 
+ PipeWireStream::~PipeWireStream()
+@@ -91,7 +92,7 @@ PipeWireStream::~PipeWireStream()
+   delete source;
+ }
+ 
+-void PipeWireStream::start(int nodeId)
++void PipeWireStream::start(int nodeId, int width, int height)
+ {
+   uint8_t buffer[4096];
+   const spa_pod *params[1];
+@@ -112,8 +113,11 @@ void PipeWireStream::start(int nodeId)
+ 
+   pw_stream_add_listener(stream, &streamListener, &streamEventsHandler, this);
+ 
+-  // FIXME: This is a bit ugly
++  // Prefer the size of the source: a compositor may resize a virtual
++  // output to whatever default the consumer offers
+   spa_rectangle defaultVideoSize{1280,720};
++  if (width > 0 && height > 0)
++    defaultVideoSize = SPA_RECTANGLE((uint32_t)width, (uint32_t)height);
+   spa_rectangle minVideoSize{1,1};
+   spa_rectangle maxVideoSize{4096,4096};
+   spa_fraction defaultFramerate{25,1};
+diff --git a/unix/w0vncserver/pipewire/PipeWireStream.h b/unix/w0vncserver/pipewire/PipeWireStream.h
+index 86f2dfb..d097617 100644
+--- a/unix/w0vncserver/pipewire/PipeWireStream.h
++++ b/unix/w0vncserver/pipewire/PipeWireStream.h
+@@ -29,11 +29,11 @@ class PipeWireSource;
+ 
+ class PipeWireStream {
+ public:
+-  PipeWireStream(int pipeWireFd, int nodeId);
++  PipeWireStream(int pipeWireFd, int nodeId, int width = 0, int height = 0);
+   virtual ~PipeWireStream();
+ 
+ private:
+-  void start(int nodeId);
++  void start(int nodeId, int width, int height);
+ 
+   void handleStreamStateChanged(enum pw_stream_state old,
+                                 enum pw_stream_state state,
+diff --git a/unix/w0vncserver/portals/PortalDesktop.cxx b/unix/w0vncserver/portals/PortalDesktop.cxx
+index 5fc29f5..0156a7d 100644
+--- a/unix/w0vncserver/portals/PortalDesktop.cxx
++++ b/unix/w0vncserver/portals/PortalDesktop.cxx
+@@ -62,9 +62,10 @@ void PortalDesktop::start()
+ {
+   assert(!remoteDesktop);
+ 
+-  std::function<void(int, uint32_t)> startPipewire = [this](int fd, uint32_t id) {
++  std::function<void(int, uint32_t, int, int)> startPipewire =
++    [this](int fd, uint32_t id, int width, int height) {
+     try {
+-      pb = new PipeWirePixelBuffer(fd, id, server);
++      pb = new PipeWirePixelBuffer(fd, id, width, height, server);
+     } catch (std::exception& e) {
+       server->closeClients(core::format("error initializing PipeWirePixelBuffer: %s",
+                                         e.what()).c_str());
+diff --git a/unix/w0vncserver/portals/RemoteDesktop.cxx b/unix/w0vncserver/portals/RemoteDesktop.cxx
+index 3c18363..0c5c2d2 100644
+--- a/unix/w0vncserver/portals/RemoteDesktop.cxx
++++ b/unix/w0vncserver/portals/RemoteDesktop.cxx
+@@ -87,12 +87,13 @@ static int getInputCode(uint32_t button)
+ }
+ 
+ RemoteDesktop::RemoteDesktop(std::string restoreToken_,
+-                             std::function<void(int fd, uint32_t nodeId)>
++                             std::function<void(int fd, uint32_t nodeId, int width, int height)>
+                                startPipewireCb_,
+                              std::function<void(const char*)>
+                                cancelStartCb_)
+   : sessionStarted(false), oldButtonMask(0), selectedDevices(0),
+-    sessionHandle(""), remoteDesktop(nullptr), screenCast(nullptr),
++    sessionHandle(""), streamWidth(0), streamHeight(0),
++    remoteDesktop(nullptr), screenCast(nullptr),
+     session(nullptr), restoreToken(restoreToken_),
+     startPipewireCb(startPipewireCb_),
+     cancelStartCb(cancelStartCb_)
+@@ -555,7 +556,7 @@ void RemoteDesktop::handleOpenPipewireRemote(GObject *proxy,
+   }
+ 
+   // FIXME: Handle multiple streams
+-  startPipewireCb(fd, pipewireNodeId);
++  startPipewireCb(fd, pipewireNodeId, streamWidth, streamHeight);
+ }
+ 
+ bool RemoteDesktop::parseStreams(GVariant* streams)
+@@ -580,6 +581,16 @@ bool RemoteDesktop::parseStreams(GVariant* streams)
+   stream = g_variant_get_child_value(streams, 0);
+   g_variant_get_child(stream, 0, "u", &pipewireNodeId);
+ 
++  // The size of the source, if the portal reports it, so that the
++  // stream starts at that size
++  GVariant* properties = g_variant_get_child_value(stream, 1);
++  if (!g_variant_lookup(properties, "size", "(ii)", &streamWidth,
++                        &streamHeight)) {
++    streamWidth = 0;
++    streamHeight = 0;
++  }
++  g_variant_unref(properties);
++
+   g_variant_unref(stream);
+ 
+   return true;
+diff --git a/unix/w0vncserver/portals/RemoteDesktop.h b/unix/w0vncserver/portals/RemoteDesktop.h
+index c4bf8bf..dee8ae3 100644
+--- a/unix/w0vncserver/portals/RemoteDesktop.h
++++ b/unix/w0vncserver/portals/RemoteDesktop.h
+@@ -33,7 +33,7 @@ class PortalProxy;
+ class RemoteDesktop {
+ public:
+   RemoteDesktop(std::string restoreToken,
+-                std::function<void(int fd, uint32_t nodeId)> startPipewireCb,
++                std::function<void(int fd, uint32_t nodeId, int width, int height)> startPipewireCb,
+                 std::function<void(const char*)> cancelStartCb);
+   ~RemoteDesktop();
+ 
+@@ -87,13 +87,15 @@ private:
+   std::string sessionHandle;
+ 
+   uint32_t pipewireNodeId;
++  int streamWidth;
++  int streamHeight;
+   PortalProxy* remoteDesktop;
+   PortalProxy* screenCast;
+   PortalProxy* session;
+ 
+   std::string restoreToken;
+ 
+-  std::function<void(int fd, uint32_t nodeId)> startPipewireCb;
++  std::function<void(int fd, uint32_t nodeId, int width, int height)> startPipewireCb;
+   std::function<void(const char* reason)> cancelStartCb;
+ };
+ 
