@@ -1,0 +1,70 @@
+# Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
+pkgname=astroarch-tools
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="AstroArch configuration tools: control center, backup, language, services and software installer"
+arch=(x86_64 aarch64)
+url=https://github.com/devDucks/astroarch-tools
+license=(MIT GPL-3.0-or-later)
+depends=(
+    gcc-libs
+    glibc
+    qt6-base
+    qt6-declarative
+    # astroarch-backup
+    btrfs-progs
+    e2fsprogs
+    polkit
+    rsync
+    udisks2
+    util-linux
+    # astroarch-locale-module
+    systemd
+    xkeyboard-config
+)
+makedepends=(cargo git qt6-tools)
+optdepends=(
+    'konsole: run update-astroarch and AstroMonitor from the Control Center'
+    'paru: install AUR packages from the software installer'
+)
+# No release tag yet: pinned to a commit of main. Switch to #tag=v${pkgver} once one exists
+_commit=3f6498f8519ae3f23ac1abfed882315947197aaf
+source=("git+https://github.com/devDucks/astroarch-tools.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+prepare() {
+    cd ${pkgname}
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd ${pkgname}
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release --workspace
+}
+
+check() {
+    cd ${pkgname}
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --frozen --release --workspace
+}
+
+package() {
+    cd ${pkgname}
+
+    local _app
+    for _app in backup control-center locale-module software-installer sys-manager; do
+        install -Dm755 target/release/astroarch-${_app} -t ${pkgdir}/usr/bin/
+        install -Dm644 crates/astroarch-${_app}/org.astroarch.${_app}.desktop -t ${pkgdir}/usr/share/applications/
+    done
+
+    # Root helper of the backup app: fixed path, the polkit action refers to it
+    install -Dm755 crates/astroarch-backup/scripts/astroarch-backup-helper.sh ${pkgdir}/usr/lib/astroarch-backup/astroarch-backup-helper
+    install -Dm644 crates/astroarch-backup/scripts/org.astroarch.backup.policy -t ${pkgdir}/usr/share/polkit-1/actions/
+
+    install -Dm644 crates/astroarch-software-installer/data/software.toml -t ${pkgdir}/usr/share/astroarch-software-installer/
+
+    install -Dm644 LICENSE -t ${pkgdir}/usr/share/licenses/${pkgname}/
+}
