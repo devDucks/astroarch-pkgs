@@ -41,6 +41,9 @@ EOF
 
 
     chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/.config"
+    # Pictures too: mkdir -p made it as root when it didn't exist yet, and then the user
+    # can't create anything else in it (e.g. astroarch_build.sh's Pictures/wallpapers)
+    chown "$USERNAME":"$USERNAME" "$HOME_DIR/Pictures"
     chown -R "$USERNAME":"$USERNAME" "$HOME_DIR/Pictures/Ekos"
 
     chown "$USERNAME":"$USERNAME" "$HOME_DIR/Desktop"
