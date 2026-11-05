@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-tools
 pkgver=0.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc="AstroArch configuration tools: control center, backup, language, services and software installer"
 arch=(x86_64 aarch64)
 url=https://github.com/devDucks/astroarch-tools
@@ -21,16 +21,37 @@ depends=(
     # astroarch-locale-module
     systemd
     xkeyboard-config
+    # astroarch-control-center: Kirigami, the Plasma style, KDE's country names, and the tools its probe
+    # script reads the system with (nmcli, curl, sqlite3, smbclient, unix_chkpwd)
+    kirigami
+    qqc2-desktop-style
+    ki18n
+    kcmutils
+    networkmanager
+    curl
+    sqlite
+    smbclient
+    pam
+    # Data backup to a network folder (SMB), Image storage on drives (ACLs)
+    cifs-utils
+    acl
 )
 makedepends=(cargo git qt6-tools)
 optdepends=(
-    'konsole: run update-astroarch and AstroMonitor from the Control Center'
+    'konsole: run update-astroarch, AstroMonitor and the services from the Control Center'
     'paru: install AUR packages from the software installer'
+    'plasma-nm: network and hotspot settings opened by the Control Center'
+    'plasma-workspace: user password settings opened by the Control Center'
+    'plasma-desktop: date and time settings opened by the Control Center'
+    'nfs-utils: data backup to an NFS network folder'
 )
 # No release tag yet: pinned to a commit of main. Switch to #tag=v${pkgver} once one exists
-_commit=3f6498f8519ae3f23ac1abfed882315947197aaf
-source=("git+https://github.com/devDucks/astroarch-tools.git#commit=${_commit}")
-sha256sums=('SKIP')
+_commit=bd4f7009d335f226b18cfaf77f0f47f782f0de67
+# Icons of the launchers (devDucks/astroarch-assets#2; move the pin to its merge commit)
+_assets=9923e7e532eb092dcf5c6b4ae4a0e461d1e954be
+source=("git+https://github.com/devDucks/astroarch-tools.git#commit=${_commit}"
+        "astroarch-assets::git+https://github.com/devDucks/astroarch-assets.git#commit=${_assets}")
+sha256sums=('SKIP' 'SKIP')
 
 prepare() {
     cd ${pkgname}
@@ -65,6 +86,33 @@ package() {
     install -Dm644 crates/astroarch-backup/scripts/org.astroarch.backup.policy -t ${pkgdir}/usr/share/polkit-1/actions/
 
     install -Dm644 crates/astroarch-software-installer/data/software.toml -t ${pkgdir}/usr/share/astroarch-software-installer/
+
+    # Control Center: the script it reads the system with (fixed path, see src/setup_state.rs)
+    install -Dm755 crates/astroarch-control-center/scripts/astroarch-control-center-probe.sh \
+        ${pkgdir}/usr/lib/astroarch-control-center/astroarch-control-center-probe
+    # Root helpers of the Image storage and Restore pages: fixed paths, their polkit
+    # actions refer to them
+    local _helper
+    for _helper in storage restore; do
+        install -Dm755 crates/astroarch-control-center/scripts/astroarch-${_helper}-helper.sh \
+            ${pkgdir}/usr/lib/astroarch-control-center/astroarch-${_helper}-helper
+        install -Dm644 crates/astroarch-control-center/scripts/org.astroarch.control-center.${_helper}.policy \
+            -t ${pkgdir}/usr/share/polkit-1/actions/
+    done
+    # The "Data and settings" backup every 2 hours (a user timer, turned on from the page)
+    install -Dm644 crates/astroarch-backup/systemd/astroarch-data-backup.{service,timer} \
+        -t ${pkgdir}/usr/lib/systemd/user/
+
+    # Icons of the launchers: full = scalable, sm_ = the small sizes
+    local _icons="${srcdir}/astroarch-assets/AstroArch icons/control-center_icons" _tool _size
+    for _tool in backup control-center locale-module software-installer sys-manager; do
+        install -Dm644 "${_icons}/org.astroarch.${_tool}.svg" \
+            ${pkgdir}/usr/share/icons/hicolor/scalable/apps/org.astroarch.${_tool}.svg
+        for _size in 16 22 32; do
+            install -Dm644 "${_icons}/org.astroarch.sm_${_tool}.svg" \
+                ${pkgdir}/usr/share/icons/hicolor/${_size}x${_size}/apps/org.astroarch.${_tool}.svg
+        done
+    done
 
     install -Dm644 LICENSE -t ${pkgdir}/usr/share/licenses/${pkgname}/
 }
