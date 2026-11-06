@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-tools
-pkgver=0.2.0
-pkgrel=2
+pkgver=0.2.1
+pkgrel=1
 pkgdesc="AstroArch configuration tools: control center, backup, language, services and software installer"
 arch=(x86_64 aarch64)
 url=https://github.com/devDucks/astroarch-tools
@@ -36,7 +36,7 @@ depends=(
     cifs-utils
     acl
 )
-makedepends=(cargo git qt6-tools)
+makedepends=(cargo qt6-tools)
 optdepends=(
     'konsole: run update-astroarch, AstroMonitor and the services from the Control Center'
     'paru: install AUR packages from the software installer'
@@ -45,35 +45,34 @@ optdepends=(
     'plasma-desktop: date and time settings opened by the Control Center'
     'nfs-utils: data backup to an NFS network folder'
 )
-# No release tag yet: pinned to a commit of main. Switch to #tag=v${pkgver} once one exists
-_commit=bd4f7009d335f226b18cfaf77f0f47f782f0de67
-# Icons of the launchers (devDucks/astroarch-assets#2; move the pin to its merge commit)
-_assets=9923e7e532eb092dcf5c6b4ae4a0e461d1e954be
-source=("git+https://github.com/devDucks/astroarch-tools.git#commit=${_commit}"
-        "astroarch-assets::git+https://github.com/devDucks/astroarch-assets.git#commit=${_assets}")
-sha256sums=('SKIP' 'SKIP')
+
+_assets=0.1.0   # Icons of the launchers (devDucks/astroarch-assets)
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+        "astroarch-assets-${_assets}.tar.gz::https://github.com/devDucks/astroarch-assets/archive/refs/tags/v${_assets}.tar.gz")
+sha256sums=('607666ccdaa6f6f8235fbc30a01a0620e36e4ddf273522f8f389723a5a4f68aa'
+            '47460cca6b215b5951005eba3b2de828f6e516a3bb4ccc59c388f98f1586a7c5')
 
 prepare() {
-    cd ${pkgname}
+    cd ${pkgname}-${pkgver}
     export RUSTUP_TOOLCHAIN=stable
     cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-    cd ${pkgname}
+    cd ${pkgname}-${pkgver}
     export RUSTUP_TOOLCHAIN=stable
     export CARGO_TARGET_DIR=target
     cargo build --frozen --release --workspace
 }
 
 check() {
-    cd ${pkgname}
+    cd ${pkgname}-${pkgver}
     export RUSTUP_TOOLCHAIN=stable
     cargo test --frozen --release --workspace
 }
 
 package() {
-    cd ${pkgname}
+    cd ${pkgname}-${pkgver}
 
     local _app
     for _app in backup control-center locale-module software-installer sys-manager; do
@@ -104,7 +103,7 @@ package() {
         -t ${pkgdir}/usr/lib/systemd/user/
 
     # Icons of the launchers: full = scalable, sm_ = the small sizes
-    local _icons="${srcdir}/astroarch-assets/AstroArch icons/control-center_icons" _tool _size
+    local _icons="${srcdir}/astroarch-assets-${_assets}/AstroArch icons/control-center_icons" _tool _size
     for _tool in backup control-center locale-module software-installer sys-manager; do
         install -Dm644 "${_icons}/org.astroarch.${_tool}.svg" \
             ${pkgdir}/usr/share/icons/hicolor/scalable/apps/org.astroarch.${_tool}.svg
