@@ -1,0 +1,329 @@
+name: Weekly -git builds
+
+# Rebuilds the bleeding-edge packages (the ones `use-astro-bleeding-edge` installs) from the
+# latest upstream commits, then publishes them to [astromatto] and updates the databases.
+# The -git PKGBUILDs compute their version at build time (pkgver()), so no commit is needed.
+#
+#   libindi-git ──┬─> indi-3rdparty-libs-git ──> indi-3rdparty-drivers-git (+ fxload)
+#                 └─> kstars-git (+ stellarsolver)
+#
+# Publishing is all or nothing: if any build fails (on either architecture), nothing is
+# uploaded, so the repo never mixes a new libindi-git with drivers built against the old one.
+# Re-running the failed jobs also runs the publish jobs again.
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # every Monday at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Architecture to build'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - x86_64
+          - aarch64
+      publish:
+        description: 'Upload the packages and update the database'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: weekly-git
+  cancel-in-progress: false
+
+jobs:
+  # ── Arch matrix (same runners and images as indi.yml / kstars.yml) ───────────
+  setup:
+    name: Set arch matrix
+    runs-on: ubuntu-latest
+    outputs:
+      arch_matrix: ${{ steps.set-matrix.outputs.arch_matrix }}
+      arches:      ${{ steps.set-matrix.outputs.arches }}
+    steps:
+      - name: Set arch matrix
+        id: set-matrix
+        run: |
+          x86='{"arch":"x86_64","runner":"\"ubuntu-latest\"","image":"archlinux:latest","pkg_glob":"*.pkg.tar.zst"}'
+          arm='{"arch":"aarch64","runner":"[\"self-hosted\"]","image":"ghcr.io/devducks/archlinuxarm:latest","pkg_glob":"*.pkg.tar.xz"}'
+          case "${{ inputs.arch }}" in
+            x86_64)  echo "arch_matrix={\"include\":[$x86]}" >> "$GITHUB_OUTPUT"; echo 'arches=["x86_64"]' >> "$GITHUB_OUTPUT" ;;
+            aarch64) echo "arch_matrix={\"include\":[$arm]}" >> "$GITHUB_OUTPUT"; echo 'arches=["aarch64"]' >> "$GITHUB_OUTPUT" ;;
+            *)       echo "arch_matrix={\"include\":[$x86,$arm]}" >> "$GITHUB_OUTPUT"; echo 'arches=["x86_64","aarch64"]' >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  # ── libindi-git ───────────────────────────────────────────────────────────────
+  build-libindi-git:
+    name: "Build libindi-git [${{ matrix.arch }}]"
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build libindi-git
+        run: bash ci/build-package.sh libindi-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/libindi-git/${{ matrix.pkg_glob }}
+            !packages/libindi-git/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── fxload (needed to build the drivers, not uploaded) ────────────────────────
+  build-fxload:
+    name: "Build fxload [${{ matrix.arch }}]"
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 10
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build fxload
+        run: bash ci/build-package.sh fxload
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-fxload-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/fxload/${{ matrix.pkg_glob }}
+            !packages/fxload/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── stellarsolver (needed to build kstars-git, not uploaded) ──────────────────
+  build-stellarsolver:
+    name: "Build stellarsolver [${{ matrix.arch }}]"
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 30
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Build stellarsolver
+        run: bash ci/build-package.sh stellarsolver
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-stellarsolver-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/stellarsolver/${{ matrix.pkg_glob }}
+            !packages/stellarsolver/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-libs-git: libindi-git → indi-3rdparty-libs-git ──────────────
+  build-indi-3rdparty-libs-git:
+    name: "Build indi-3rdparty-libs-git [${{ matrix.arch }}]"
+    needs: [setup, build-libindi-git]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi-git artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build indi-3rdparty-libs-git
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-libs-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-libs-git-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/indi-3rdparty-libs-git/${{ matrix.pkg_glob }}
+            !packages/indi-3rdparty-libs-git/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── indi-3rdparty-drivers-git ─────────────────────────────────────────────────
+  build-indi-3rdparty-drivers-git:
+    name: "Build indi-3rdparty-drivers-git [${{ matrix.arch }}]"
+    needs: [setup, build-libindi-git, build-indi-3rdparty-libs-git, build-fxload]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 90
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi-git artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download indi-3rdparty-libs-git artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-libs-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download fxload artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-fxload-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Install pigpio from AUR (aarch64 only)
+        if: matrix.arch == 'aarch64'
+        run: |
+          pacman -S --noconfirm --noprogressbar --needed git base-devel sudo
+          useradd -m aur-user
+          echo "aur-user ALL=(ALL) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/aur-user
+          chmod 0440 /etc/sudoers.d/aur-user
+          git clone https://aur.archlinux.org/pigpio.git /tmp/pigpio
+          chown -R aur-user:aur-user /tmp/pigpio
+          su - aur-user -c "cd /tmp/pigpio && makepkg -si --noconfirm --noprogressbar"
+
+      - name: Build indi-3rdparty-drivers-git
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh indi-3rdparty-drivers-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-indi-3rdparty-drivers-git-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/indi-3rdparty-drivers-git/${{ matrix.pkg_glob }}
+            !packages/indi-3rdparty-drivers-git/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── kstars-git: libindi-git + stellarsolver → kstars-git ──────────────────────
+  build-kstars-git:
+    name: "Build kstars-git [${{ matrix.arch }}]"
+    needs: [setup, build-libindi-git, build-stellarsolver]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
+    runs-on: ${{ fromJson(matrix.runner) }}
+    container:
+      image: ${{ matrix.image }}
+    timeout-minutes: 300   # kstars took 171 minutes on aarch64 (2026-10-05)
+    steps:
+      - name: Bootstrap pacman keyring
+        if: matrix.arch == 'aarch64'
+        run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
+
+      - uses: actions/checkout@v4
+
+      - name: Download libindi-git artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-libindi-git-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Download stellarsolver artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pkg-stellarsolver-${{ matrix.arch }}
+          path: /tmp/local-pkgs/
+
+      - name: Build kstars-git
+        env:
+          LOCAL_PKG_DIR: /tmp/local-pkgs
+        run: bash ci/build-package.sh kstars-git
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-kstars-git-${{ matrix.arch }}
+          # x86_64 makepkg also makes a -debug package: not needed, not uploaded
+          path: |
+            packages/kstars-git/${{ matrix.pkg_glob }}
+            !packages/kstars-git/*-debug-*
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── Publish: only when every build above succeeded ────────────────────────────
+  publish:
+    name: "Publish [${{ matrix.arch }}]"
+    needs: [setup, build-libindi-git, build-indi-3rdparty-libs-git, build-indi-3rdparty-drivers-git, build-kstars-git]
+    if: github.event_name == 'schedule' || inputs.publish
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.setup.outputs.arches) }}
+    uses: ./.github/workflows/upload.yml
+    with:
+      run_id: ${{ github.run_id }}
+      arch: ${{ matrix.arch }}
+      packages: libindi-git indi-3rdparty-libs-git indi-3rdparty-drivers-git kstars-git
+    secrets: inherit
+
+  update-db:
+    name: "Update database [${{ matrix.arch }}]"
+    needs: [setup, publish]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.setup.outputs.arches) }}
+    uses: ./.github/workflows/update-db.yml
+    with:
+      arch: ${{ matrix.arch }}
+    secrets: inherit

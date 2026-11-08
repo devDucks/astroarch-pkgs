@@ -13,6 +13,20 @@ on:
         description: 'Space-separated package names to upload (leave blank to upload all artifacts)'
         required: false
         default: ''
+  # Also called by other workflows (weekly-git.yml), with the same inputs
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+      arch:
+        type: string
+        required: false
+        default: 'x86_64'
+      packages:
+        type: string
+        required: false
+        default: ''
 jobs:
   publish:
     runs-on: ubuntu-latest

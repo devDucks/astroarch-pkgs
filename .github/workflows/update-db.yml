@@ -11,6 +11,12 @@ on:
         options:
           - x86_64
           - aarch64
+  # Also called by other workflows (weekly-git.yml), with the same input
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        required: true
 
 jobs:
   update-db:
