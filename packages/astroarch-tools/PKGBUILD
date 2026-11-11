@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=astroarch-tools
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
 pkgdesc="AstroArch configuration tools: control center, backup, language, services and software installer"
 arch=(x86_64 aarch64)
@@ -49,7 +49,7 @@ optdepends=(
 _assets=0.1.0   # Icons of the launchers (devDucks/astroarch-assets)
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
         "astroarch-assets-${_assets}.tar.gz::https://github.com/devDucks/astroarch-assets/archive/refs/tags/v${_assets}.tar.gz")
-sha256sums=('607666ccdaa6f6f8235fbc30a01a0620e36e4ddf273522f8f389723a5a4f68aa'
+sha256sums=('8e599392fd0c69c158b3e65a1138b39420cfa10b886841d3f08fc2e366220b38'
             '47460cca6b215b5951005eba3b2de828f6e516a3bb4ccc59c388f98f1586a7c5')
 
 prepare() {
