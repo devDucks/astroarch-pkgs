@@ -1,6 +1,6 @@
 # Maintainer: Mattia Procopio (astro.matto)  <matto.astro at gmail dot com>
 pkgname=rpicam-apps
-pkgver=1.13.0
+pkgver=1.14.0
 pkgrel=1
 pkgdesc="This is a small suite of libcamera-based applications to drive the cameras on a Raspberry Pi platform."
 arch=(aarch64)
@@ -12,7 +12,7 @@ license=(LGPLv2
          BSD3)
 depends=(boost
 	 boost-libs
-	 libcamera
+	 libcamera-rpi
 	 libexif
          libpisp
 	 libpng
@@ -21,8 +21,10 @@ depends=(boost
 makedepends=(meson
              python-jinja
              python-sphinx)
-source=("https://github.com/raspberrypi/rpicam-apps/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('470b12bf3b96180a972e0d11beb18a41084fef3191604fb2fe3e0b3123b95fef')
+source=("https://github.com/raspberrypi/rpicam-apps/archive/refs/tags/v$pkgver.tar.gz"
+        99-raspberrypi-dmaheap.rules)
+sha256sums=('2bfad6db8754588fad418af771ee0a721f016bc02a0b037b4ea9c487786b4acd'
+            '4fa512367f7602581703e977f4ca1eaed42199faf8ae15f1a7f47986daced955')
 
 # paru python-pidng-git kmsxx-git
 build() {
@@ -31,8 +33,7 @@ build() {
 }
 
 package() {
-    mkdir -p $pkgdir/usr/lib/udev/rules.d/
     cd $srcdir/rpicam-apps-$pkgver
     DESTDIR="$pkgdir" ninja -C build install
-    install -m 755 $srcdir/../99-raspberrypi-dmaheap.rules $pkgdir/usr/lib/udev/rules.d/
+    install -Dm644 $srcdir/99-raspberrypi-dmaheap.rules -t $pkgdir/usr/lib/udev/rules.d/
 }
