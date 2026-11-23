@@ -27,6 +27,7 @@ depends=(cfitsio
          opencv
          wcslib)
 makedepends=(cmake
+             git
              meson
              ninja)
 optdepends=('ffmpeg: For AVI export')
@@ -37,14 +38,9 @@ options=(!lto)
 #sha256sums=('b1682f2129d2e06b034445ed225766a06e38cfaa7451b92d606a3ee36eb077a4')
 
 ### To be removed when OpenCV 5 is released in a higher version
-source=("git+$url.git")
+### Branch 1.4 (between 1.4.5 and 1.4.6) pinned to a commit that has the OpenCV 5 fixes
+source=("git+$url.git#commit=42ec35c65442a62458580432bb2e2d73c8a1e245")
 sha256sums=('SKIP')
-
-prepare() {
-  cd "$srcdir/$pkgname/"
-  pkgver=1.4 ### Version 1.4 patch between versions 1.4.5 and 1.4.6
-  git checkout $pkgver
-}
 ###
 
 build() {
