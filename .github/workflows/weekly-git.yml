@@ -4,8 +4,12 @@ name: Weekly -git builds
 # latest upstream commits, then publishes them to [astromatto] and updates the databases.
 # The -git PKGBUILDs compute their version at build time (pkgver()), so no commit is needed.
 #
-#   libindi-git ──┬─> indi-3rdparty-libs-git ──> indi-3rdparty-drivers-git (+ fxload)
-#                 └─> kstars-git (+ stellarsolver)
+#   libindi-git ──> indi-3rdparty-libs-git ──> indi-3rdparty-drivers-git (+ fxload)
+#                                                 └─> kstars-git (+ stellarsolver)
+#
+# kstars-git waits for the drivers although it does not need them: on aarch64 the
+# self-hosted runners share one small machine, and kstars-git next to another build
+# runs out of disk (2026-11-16 and 11-23: "No space left on device" while cloning kstars).
 #
 # Publishing is all or nothing: if any build fails (on either architecture), nothing is
 # uploaded, so the repo never mixes a new libindi-git with drivers built against the old one.
@@ -257,7 +261,8 @@ jobs:
   # ── kstars-git: libindi-git + stellarsolver → kstars-git ──────────────────────
   build-kstars-git:
     name: "Build kstars-git [${{ matrix.arch }}]"
-    needs: [setup, build-libindi-git, build-stellarsolver]
+    # build-indi-3rdparty-drivers-git only to run alone on aarch64 (see the top of the file)
+    needs: [setup, build-libindi-git, build-stellarsolver, build-indi-3rdparty-drivers-git]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.arch_matrix) }}
@@ -271,6 +276,10 @@ jobs:
         run: pacman-key --init && pacman-key --populate archlinuxarm && pacman -Syu --noconfirm
 
       - uses: actions/checkout@v4
+
+      - name: Disk space
+        if: matrix.arch == 'aarch64'
+        run: df -h / /__w /tmp || true
 
       - name: Download libindi-git artifact
         uses: actions/download-artifact@v4
@@ -288,6 +297,10 @@ jobs:
         env:
           LOCAL_PKG_DIR: /tmp/local-pkgs
         run: bash ci/build-package.sh kstars-git
+
+      - name: Disk space
+        if: always() && matrix.arch == 'aarch64'
+        run: df -h / /__w /tmp || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
