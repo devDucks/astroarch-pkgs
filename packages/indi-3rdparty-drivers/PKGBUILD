@@ -1,7 +1,7 @@
 # Maintainer: Mattia Procopio (astro.matto) <matto.astro at gmail dot com>
 pkgname=indi-3rdparty-drivers
 pkgver=2.2.5
-pkgrel=2
+pkgrel=3
 pkgdesc='Indi 3rd party drivers'
 arch=(x86_64 aarch64)
 url='https://indilib.org'
@@ -20,6 +20,7 @@ depends_aarch64=(dfu-util
                  gpsd
                  indi-3rdparty-libs
                  libdc1394
+                 libgpiod
                  limesuite
                  pigpio
                  pipewire-jack
