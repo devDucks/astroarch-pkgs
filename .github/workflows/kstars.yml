@@ -106,7 +106,7 @@ jobs:
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
-    timeout-minutes: 180
+    timeout-minutes: 300   # kstars [aarch64] hit 180 at 94% on 2026-11-26
     steps:
       - name: Bootstrap pacman keyring
         if: matrix.arch == 'aarch64'
