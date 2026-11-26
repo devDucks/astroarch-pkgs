@@ -64,6 +64,9 @@ jobs:
               fi
             done
           fi
+          # x86_64 makepkg also makes -debug packages (kstars-debug alone is ~270 MB):
+          # never published, as in weekly-git.yml
+          find ./packages -name '*-debug-*.pkg.tar.*' -print -delete
           echo "Packages to upload:"
           ls ./packages/
 
