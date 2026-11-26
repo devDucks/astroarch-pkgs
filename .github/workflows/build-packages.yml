@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 

@@ -76,7 +76,7 @@ jobs:
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Bootstrap pacman keyring
         if: matrix.arch == 'aarch64'
@@ -245,7 +245,7 @@ jobs:
     runs-on: ${{ fromJson(matrix.runner) }}
     container:
       image: ${{ matrix.image }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Bootstrap pacman keyring
         if: matrix.arch == 'aarch64'
